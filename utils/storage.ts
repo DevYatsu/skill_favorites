@@ -14,7 +14,7 @@ export interface FavoriteSkill {
 export type PackageManager = "npx" | "bunx" | "pnpm dlx";
 export type StorageMode = "local" | "sync";
 
-export const storageModePref = storage.defineItem<StorageMode>("local:storageMode", {
+export const storageModePref = storage.defineItem<StorageMode>("sync:storageMode", {
 	fallback: "local",
 	version: 1,
 });

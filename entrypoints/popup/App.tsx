@@ -19,13 +19,25 @@ function App() {
 
 	// Read favorites reactively
 	favorites.watch((newFavs) => {
-		setList(newFavs || []);
+		if (Array.isArray(newFavs)) {
+			setList([...newFavs]);
+		} else {
+			setList([]);
+		}
 	});
 
 	// Initial load
 	onMount(async () => {
-		const initial = await favorites.getValue();
-		setList(initial || []);
+		try {
+			const initial = await favorites.getValue();
+			if (Array.isArray(initial)) {
+				setList([...initial]);
+			} else {
+				setList([]);
+			}
+		} catch (err) {
+			console.error("Failed to load favorites in popup:", err);
+		}
 	});
 
 	// Calculate unique tags present across all starred skills
