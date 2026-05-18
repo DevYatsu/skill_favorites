@@ -1,5 +1,6 @@
 // components/BackupDrawer.tsx
 import { Show, createSignal } from "solid-js";
+import { browser } from "wxt/browser";
 import { type FavoriteSkill, favorites } from "@/utils/storage";
 
 interface BackupDrawerProps {
@@ -130,6 +131,17 @@ export function BackupDrawer(props: BackupDrawerProps) {
 		}
 	};
 
+	const handleLabelClick = async (e: MouseEvent) => {
+		// If we are in a small popup window, the OS file picker will close it (breaking the script).
+		// We intercept the click, stop the picker, and open the extension in a full tab instead.
+		if (window.innerWidth < 800) {
+			e.preventDefault();
+			const url = browser.runtime.getURL("/popup.html");
+			await browser.tabs.create({ url });
+			window.close();
+		}
+	};
+
 	return (
 		<Show when={props.show}>
 			<div class="settings-drawer">
@@ -187,7 +199,8 @@ export function BackupDrawer(props: BackupDrawerProps) {
 
 							<label
 								class="settings-action-btn import-btn"
-								title="Import and merge configuration JSON file (Drag & Drop supported)"
+								title="Import and merge configuration JSON file"
+								onClick={handleLabelClick}
 								onDragOver={(e) => e.preventDefault()}
 								onDrop={handleDrop}
 							>
