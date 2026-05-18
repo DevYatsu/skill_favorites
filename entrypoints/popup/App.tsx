@@ -9,6 +9,7 @@ function App() {
   const [selectedTag, setSelectedTag] = createSignal('');
   const [editingId, setEditingId] = createSignal('');
   const [newTagText, setNewTagText] = createSignal('');
+  const [copiedId, setCopiedId] = createSignal('');
 
   // Read favorites reactively
   favorites.watch((newFavs) => {
@@ -60,6 +61,23 @@ function App() {
     setNewTagText('');
     if (tagText) {
       await addSkillTag(id, tagText);
+    }
+  };
+
+  const handleCopyCommand = async (skill: FavoriteSkill, e: MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const command = `npx skills add https://github.com/${skill.ownerRepo} --skill ${skill.name}`;
+    try {
+      await navigator.clipboard.writeText(command);
+      setCopiedId(skill.id);
+      setTimeout(() => {
+        if (copiedId() === skill.id) {
+          setCopiedId('');
+        }
+      }, 1500);
+    } catch (err) {
+      console.error('Failed to copy command: ', err);
     }
   };
 
@@ -208,6 +226,46 @@ function App() {
                       <Show when={skill.installs}>
                         <span class="installs-tag">{skill.installs}</span>
                       </Show>
+                      <button
+                        onClick={(e) => handleCopyCommand(skill, e)}
+                        class="copy-btn"
+                        classList={{ copied: copiedId() === skill.id }}
+                        title={copiedId() === skill.id ? "Copied!" : "Copy installation command"}
+                        aria-label="Copy installation command"
+                        type="button"
+                      >
+                        <Show
+                          when={copiedId() === skill.id}
+                          fallback={
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              stroke-width="2"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              class="copy-icon"
+                            >
+                              <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+                              <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+                            </svg>
+                          }
+                        >
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="#10b981"
+                            stroke-width="2.5"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            class="copy-icon check-icon"
+                          >
+                            <path d="M20 6 9 17l-5-5" />
+                          </svg>
+                        </Show>
+                      </button>
                       <button
                         onClick={(e) => handleRemove(skill.id, e)}
                         class="remove-btn"

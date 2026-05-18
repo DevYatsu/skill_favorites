@@ -252,7 +252,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  min-w: 0;
+  min-width: 0;
   flex: 1;
 }
 
@@ -342,6 +342,34 @@
 }
 
 .trash-icon {
+  width: 13px;
+  height: 13px;
+}
+
+.copy-btn {
+  background: transparent;
+  border: none;
+  color: #404040;
+  padding: 6px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.copy-btn:hover {
+  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.copy-btn.copied {
+  color: #10b981;
+  background-color: rgba(16, 185, 129, 0.08);
+}
+
+.copy-icon {
   width: 13px;
   height: 13px;
 }
