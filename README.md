@@ -26,7 +26,17 @@ Built with **[WXT](https://wxt.dev)** and **[SolidJS](https://www.solidjs.com/)*
 - **Code Quality:** [Biome](https://biomejs.dev/) for blazing fast formatting and linting.
 - **Styling:** Custom, zero-dependency minimalist CSS.
 
-## Getting Started
+## Installation
+
+The easiest way to install **skills-favorites** is to download the latest pre-built release:
+
+1. Go to the [Releases](https://github.com/DevYatsu/skill_favorites/releases) page.
+2. Download the `.zip` file for your browser (`chrome.zip` or `firefox.zip`).
+3. Unzip the file.
+4. **For Chrome/Edge**: Go to `chrome://extensions/` (or `edge://extensions/`), enable "Developer mode", and click "Load unpacked". Select the unzipped folder.
+5. **For Firefox**: Go to `about:debugging#/runtime/this-firefox`, click "Load Temporary Add-on", and select the `manifest.json` inside the unzipped folder.
+
+## Development Setup
 
 ### Prerequisites
 Make sure you have Node.js and your preferred package manager (`npm`, `pnpm`, or `bun`) installed.
