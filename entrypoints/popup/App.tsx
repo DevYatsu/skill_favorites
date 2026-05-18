@@ -17,17 +17,7 @@ function App() {
 	const [selectedTag, setSelectedTag] = createSignal("");
 	const [showClearConfirm, setShowClearConfirm] = createSignal(false);
 
-	// Read favorites reactively
-	favorites.watch((newFavs) => {
-		if (Array.isArray(newFavs)) {
-			setList([...newFavs]);
-		} else {
-			setList([]);
-		}
-	});
-
-	// Initial load
-	onMount(async () => {
+	const refreshList = async () => {
 		try {
 			const initial = await favorites.getValue();
 			if (Array.isArray(initial)) {
@@ -38,6 +28,11 @@ function App() {
 		} catch (err) {
 			console.error("Failed to load favorites in popup:", err);
 		}
+	};
+
+	// Initial load
+	onMount(() => {
+		refreshList();
 	});
 
 	// Calculate unique tags present across all starred skills
@@ -76,14 +71,17 @@ function App() {
 		e.preventDefault();
 		e.stopPropagation();
 		await removeFavorite(id);
+		await refreshList();
 	};
 
 	const handleSaveTag = async (id: string, tag: string) => {
 		await addSkillTag(id, tag);
+		await refreshList();
 	};
 
 	const handleRemoveTag = async (id: string, tag: string) => {
 		await removeSkillTag(id, tag);
+		await refreshList();
 	};
 
 	const handleClearAll = () => {
@@ -93,6 +91,7 @@ function App() {
 	const confirmClearAll = async () => {
 		await favorites.setValue([]);
 		setShowClearConfirm(false);
+		await refreshList();
 	};
 
 	const cancelClearAll = () => {
