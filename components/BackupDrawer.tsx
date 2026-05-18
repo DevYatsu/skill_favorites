@@ -1,6 +1,6 @@
 // components/BackupDrawer.tsx
 import { Show, createSignal } from "solid-js";
-import { FavoriteSkill, favorites } from "@/utils/storage";
+import { type FavoriteSkill, favorites } from "@/utils/storage";
 
 interface BackupDrawerProps {
 	show: boolean;
@@ -33,10 +33,10 @@ export function BackupDrawer(props: BackupDrawerProps) {
 				text: "Favorites exported successfully!",
 			});
 			setTimeout(() => setSettingsMessage(null), 3000);
-		} catch (err: any) {
+		} catch (err) {
 			setSettingsMessage({
 				type: "error",
-				text: `Export failed: ${err.message || "Unknown error"}`,
+				text: `Export failed: ${err instanceof Error ? err.message : "Unknown error"}`,
 			});
 			setTimeout(() => setSettingsMessage(null), 3000);
 		}
@@ -58,7 +58,7 @@ export function BackupDrawer(props: BackupDrawerProps) {
 				}
 
 				// Validate imported schema
-				imported.forEach((item: any, idx: number) => {
+				imported.forEach((item: Partial<FavoriteSkill>, idx: number) => {
 					if (!item.id || !item.name || !item.ownerRepo) {
 						throw new Error(
 							`Item at index ${idx} is missing required fields (id, name, ownerRepo).`,
@@ -72,7 +72,7 @@ export function BackupDrawer(props: BackupDrawerProps) {
 				);
 
 				let newCount = 0;
-				imported.forEach((item: any) => {
+				imported.forEach((item: FavoriteSkill) => {
 					const existing = currentMap.get(item.id);
 					if (existing) {
 						// Merge tags de-duplicating them
@@ -107,10 +107,10 @@ export function BackupDrawer(props: BackupDrawerProps) {
 				});
 				target.value = "";
 				setTimeout(() => setSettingsMessage(null), 4000);
-			} catch (err: any) {
+			} catch (err) {
 				setSettingsMessage({
 					type: "error",
-					text: `Import failed: ${err.message || "Invalid JSON format"}`,
+					text: `Import failed: ${err instanceof Error ? err.message : "Invalid JSON format"}`,
 				});
 				setTimeout(() => setSettingsMessage(null), 4000);
 			}
@@ -205,11 +205,11 @@ export function BackupDrawer(props: BackupDrawerProps) {
 							<div
 								class="settings-status"
 								classList={{
-									error: settingsMessage()!.type === "error",
-									success: settingsMessage()!.type === "success",
+									error: settingsMessage()?.type === "error",
+									success: settingsMessage()?.type === "success",
 								}}
 							>
-								{settingsMessage()!.text}
+								{settingsMessage()?.text}
 							</div>
 						</Show>
 					</div>

@@ -1,6 +1,6 @@
 // components/SkillCard.tsx
 import { createSignal, Show, For } from "solid-js";
-import { FavoriteSkill } from "@/utils/storage";
+import type { FavoriteSkill } from "@/utils/storage";
 
 interface SkillCardProps {
 	skill: FavoriteSkill;
@@ -42,32 +42,23 @@ export function SkillCard(props: SkillCardProps) {
 	};
 
 	return (
-		<div
-			class="skill-card"
-			onClick={() => props.openLink(props.skill.href)}
-			onKeyDown={(e) => {
-				if (e.key === "Enter" || e.key === " ") {
-					e.preventDefault();
-					props.openLink(props.skill.href);
-				}
-			}}
-			role="button"
-			tabIndex={0}
-		>
+		<div class="skill-card">
 			<div class="skill-card-top">
-				<div class="skill-main">
-					<div class="skill-avatar">{props.skill.name.charAt(0).toUpperCase()}</div>
+				<button
+					class="skill-main"
+					onClick={() => props.openLink(props.skill.href)}
+					type="button"
+					title={`Open ${props.skill.name} repository`}
+				>
+					<div class="skill-avatar">
+						{props.skill.name.charAt(0).toUpperCase()}
+					</div>
 					<div class="skill-info">
 						<div class="skill-name">{props.skill.name}</div>
 						<div class="skill-repo">{props.skill.ownerRepo}</div>
 					</div>
-				</div>
-				<div
-					class="skill-side"
-					onClick={(e) => e.stopPropagation()}
-					onKeyDown={(e) => e.stopPropagation()}
-					role="presentation"
-				>
+				</button>
+				<div class="skill-side">
 					<Show when={props.skill.installs}>
 						<span class="installs-tag">{props.skill.installs}</span>
 					</Show>
@@ -141,12 +132,7 @@ export function SkillCard(props: SkillCardProps) {
 			</div>
 
 			{/* Bottom tagging block */}
-			<div
-				class="skill-card-bottom"
-				onClick={(e) => e.stopPropagation()}
-				onKeyDown={(e) => e.stopPropagation()}
-				role="presentation"
-			>
+			<div class="skill-card-bottom">
 				<div class="skill-tags-list">
 					<For each={props.skill.tags || []}>
 						{(tag) => (
@@ -154,7 +140,10 @@ export function SkillCard(props: SkillCardProps) {
 								{tag}
 								<button
 									class="delete-tag-btn"
-									onClick={() => props.onRemoveTag(props.skill.id, tag)}
+									onClick={(e) => {
+										e.stopPropagation();
+										props.onRemoveTag(props.skill.id, tag);
+									}}
 									title="Remove tag"
 									type="button"
 								>
@@ -170,7 +159,10 @@ export function SkillCard(props: SkillCardProps) {
 						fallback={
 							<button
 								class="add-tag-trigger"
-								onClick={() => setIsEditing(true)}
+								onClick={(e) => {
+									e.stopPropagation();
+									setIsEditing(true);
+								}}
 								title="Add tag"
 								type="button"
 							>
@@ -178,21 +170,17 @@ export function SkillCard(props: SkillCardProps) {
 							</button>
 						}
 					>
-						<form
-							class="inline-tag-form"
-							onSubmit={(e) => {
-								e.preventDefault();
-								handleSave();
-							}}
-						>
+						<form class="inline-tag-form" onSubmit={handleSave}>
 							<input
 								ref={(el) => setTimeout(() => el?.focus(), 50)}
 								type="text"
 								class="inline-tag-input"
 								placeholder="tag..."
 								value={newTagText()}
+								onClick={(e) => e.stopPropagation()}
 								onInput={(e) => setNewTagText(e.currentTarget.value)}
 								onKeyDown={(e) => {
+									e.stopPropagation();
 									if (e.key === "Escape") {
 										setIsEditing(false);
 										setNewTagText("");

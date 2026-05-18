@@ -5,7 +5,7 @@ import {
 	removeFavorite,
 	addSkillTag,
 	removeSkillTag,
-	FavoriteSkill,
+	type FavoriteSkill,
 } from "@/utils/storage";
 import { SkillCard } from "@/components/SkillCard";
 import { BackupDrawer } from "@/components/BackupDrawer";
@@ -234,7 +234,9 @@ function App() {
 								</svg>
 							</div>
 							<p class="empty-title">
-								{list().length === 0 ? "No starred skills yet" : "No matches found"}
+								{list().length === 0
+									? "No starred skills yet"
+									: "No matches found"}
 							</p>
 							<p class="empty-desc">
 								{list().length === 0

@@ -589,14 +589,14 @@
 	background-color: rgba(255, 255, 255, 0.08);
 }
 
-.settings-btn.active .settings-icon {
-	transform: rotate(45deg);
-}
-
 .settings-icon {
 	width: 14px;
 	height: 14px;
 	transition: transform 0.3s ease;
+}
+
+.settings-btn.active .settings-icon {
+	transform: rotate(45deg);
 }
 
 .settings-drawer {
