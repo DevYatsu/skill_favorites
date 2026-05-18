@@ -4,7 +4,9 @@ import { type FavoriteSkill, packageManagerPref } from "@/utils/storage";
 
 interface SkillCardProps {
 	skill: FavoriteSkill;
+	pinned: boolean;
 	onRemove: (id: string, e: MouseEvent) => void;
+	onTogglePin: (id: string) => Promise<void>;
 	onSaveTag: (id: string, tag: string) => Promise<void>;
 	onRemoveTag: (id: string, tag: string) => Promise<void>;
 	openLink: (href: string) => void;
@@ -43,7 +45,7 @@ export function SkillCard(props: SkillCardProps) {
 	};
 
 	return (
-		<div class="skill-card">
+		<div class="skill-card" classList={{ pinned: props.pinned }}>
 			<div class="skill-card-top">
 				<button
 					class="skill-main"
@@ -55,7 +57,18 @@ export function SkillCard(props: SkillCardProps) {
 						{props.skill.name.charAt(0).toUpperCase()}
 					</div>
 					<div class="skill-info">
-						<div class="skill-name">{props.skill.name}</div>
+						<div class="skill-name">
+							<Show when={props.pinned}>
+								<span class="pin-indicator" title="Pinned" aria-label="Pinned">
+									{/* pin icon inline */}
+									<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="pin-dot-icon">
+										<title>Pinned</title>
+										<path d="M12 2a1 1 0 0 1 .894.553l2.184 4.426 4.887.71a1 1 0 0 1 .555 1.706l-3.536 3.444.834 4.866a1 1 0 0 1-1.451 1.054L12 16.347l-4.367 2.412a1 1 0 0 1-1.451-1.054l.834-4.866L3.48 9.395a1 1 0 0 1 .555-1.706l4.887-.71L11.106 2.553A1 1 0 0 1 12 2z" />
+									</svg>
+								</span>
+							</Show>
+							{props.skill.name}
+						</div>
 						<div class="skill-repo">{props.skill.ownerRepo}</div>
 					</div>
 				</button>
@@ -63,6 +76,32 @@ export function SkillCard(props: SkillCardProps) {
 					<Show when={props.skill.installs}>
 						<span class="installs-tag">{props.skill.installs}</span>
 					</Show>
+					<button
+						onClick={(e) => {
+							e.stopPropagation();
+							props.onTogglePin(props.skill.id);
+						}}
+						class="pin-btn"
+						classList={{ active: props.pinned }}
+						title={props.pinned ? "Unpin skill" : "Pin skill"}
+						aria-label={props.pinned ? "Unpin skill" : "Pin skill"}
+						type="button"
+					>
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							viewBox="0 0 24 24"
+							fill={props.pinned ? "currentColor" : "none"}
+							stroke="currentColor"
+							stroke-width="2"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							class="pin-icon"
+						>
+							<title>{props.pinned ? "Unpin" : "Pin"}</title>
+							<line x1="12" y1="17" x2="12" y2="22" />
+							<path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z" />
+						</svg>
+					</button>
 					<button
 						onClick={handleCopy}
 						class="copy-btn"

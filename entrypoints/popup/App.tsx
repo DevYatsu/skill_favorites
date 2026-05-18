@@ -1,11 +1,15 @@
 // entrypoints/popup/App.tsx
-import { createSignal, For, Show, onMount } from "solid-js";
+import { createSignal, For, Show, onMount, onCleanup } from "solid-js";
 import {
 	favorites,
 	removeFavorite,
 	addSkillTag,
 	removeSkillTag,
+	togglePin,
+	pinnedSkills,
+	sortOrderPref,
 	type FavoriteSkill,
+	type SortOrder,
 } from "@/utils/storage";
 import { SkillCard } from "@/components/SkillCard";
 import { ConfirmModal } from "@/components/ConfirmModal";
@@ -13,41 +17,103 @@ import "./App.css";
 
 function App() {
 	const [list, setList] = createSignal<FavoriteSkill[]>([]);
+	const [pinned, setPinned] = createSignal<string[]>([]);
+	const [sortOrder, setSortOrder] = createSignal<SortOrder>("added");
 	const [search, setSearch] = createSignal("");
 	const [selectedTag, setSelectedTag] = createSignal("");
 	const [showClearConfirm, setShowClearConfirm] = createSignal(false);
+	let searchInputRef: HTMLInputElement | undefined;
+	// Tracks the currently keyboard-focused skill card index (-1 = none)
+	let focusedIndex = -1;
 
 	const refreshList = async () => {
 		try {
-			const initial = await favorites.getValue();
-			if (Array.isArray(initial)) {
-				setList([...initial]);
-			} else {
-				setList([]);
-			}
+			const [data, pins, order] = await Promise.all([
+				favorites.getValue(),
+				pinnedSkills.getValue(),
+				sortOrderPref.getValue(),
+			]);
+			setList(Array.isArray(data) ? [...data] : []);
+			setPinned(Array.isArray(pins) ? [...pins] : []);
+			setSortOrder(order ?? "added");
 		} catch (err) {
 			console.error("Failed to load favorites in popup:", err);
 		}
 	};
 
-	// Initial load
 	onMount(() => {
 		refreshList();
+
+		// Keyboard shortcuts
+		const onKey = (e: KeyboardEvent) => {
+			// Cmd/Ctrl+F — focus search
+			if ((e.metaKey || e.ctrlKey) && e.key === "f") {
+				e.preventDefault();
+				searchInputRef?.focus();
+				return;
+			}
+
+			// Esc — clear search if focused, otherwise blur
+			if (e.key === "Escape") {
+				if (search()) {
+					setSearch("");
+				} else {
+					searchInputRef?.blur();
+				}
+				return;
+			}
+
+			// Arrow navigation only when search is NOT focused
+			if (document.activeElement === searchInputRef) return;
+
+			const cards = document.querySelectorAll<HTMLElement>(".skill-card");
+			if (!cards.length) return;
+
+			if (e.key === "ArrowDown") {
+				e.preventDefault();
+				focusedIndex = Math.min(focusedIndex + 1, cards.length - 1);
+				(cards[focusedIndex].querySelector(".skill-main") as HTMLElement)?.focus();
+			} else if (e.key === "ArrowUp") {
+				e.preventDefault();
+				focusedIndex = Math.max(focusedIndex - 1, 0);
+				(cards[focusedIndex].querySelector(".skill-main") as HTMLElement)?.focus();
+			}
+		};
+
+		document.addEventListener("keydown", onKey);
+		onCleanup(() => document.removeEventListener("keydown", onKey));
 	});
 
-	// Calculate unique tags present across all starred skills
+	// Unique tags across all starred skills
 	const allTags = () => {
 		const tagsSet = new Set<string>();
-		list().forEach((s) => {
-			if (s.tags) {
-				s.tags.forEach((t) => tagsSet.add(t));
-			}
-		});
+		for (const s of list()) {
+			if (s.tags) for (const t of s.tags) tagsSet.add(t);
+		}
 		return Array.from(tagsSet).sort();
 	};
 
-	// Multi-criteria filter: search query match AND category tag pill match
-	const filteredList = () => {
+	// Parses install count strings like "1.6M", "320K", "45" into a sortable number
+	function parseInstalls(raw: string): number {
+		if (!raw) return 0;
+		const cleaned = raw.trim().toUpperCase();
+		if (cleaned.endsWith("M")) return Number.parseFloat(cleaned) * 1_000_000;
+		if (cleaned.endsWith("K")) return Number.parseFloat(cleaned) * 1_000;
+		return Number.parseFloat(cleaned) || 0;
+	}
+
+	function applySort(items: FavoriteSkill[]): FavoriteSkill[] {
+		const order = sortOrder();
+		return [...items].sort((a, b) => {
+			if (order === "name") return a.name.localeCompare(b.name);
+			if (order === "installs") return parseInstalls(b.installs) - parseInstalls(a.installs);
+			// "added" — newest first
+			return b.addedAt - a.addedAt;
+		});
+	}
+
+	// Returns [pinnedItems, unpinnedItems] both filtered and the unpinned sorted
+	const splitList = () => {
 		let current = list();
 		const query = search().trim().toLowerCase();
 
@@ -64,13 +130,21 @@ function App() {
 			current = current.filter((s) => s.tags?.includes(tag));
 		}
 
-		return current;
+		const pins = pinned();
+		const pinnedItems = current.filter((s) => pins.includes(s.id));
+		const unpinnedItems = applySort(current.filter((s) => !pins.includes(s.id)));
+		return { pinnedItems, unpinnedItems };
 	};
 
 	const handleRemove = async (id: string, e: MouseEvent) => {
 		e.preventDefault();
 		e.stopPropagation();
 		await removeFavorite(id);
+		await refreshList();
+	};
+
+	const handleTogglePin = async (id: string) => {
+		await togglePin(id);
 		await refreshList();
 	};
 
@@ -84,9 +158,13 @@ function App() {
 		await refreshList();
 	};
 
-	const handleClearAll = () => {
-		setShowClearConfirm(true);
+	const handleSortChange = async (e: Event) => {
+		const val = (e.target as HTMLSelectElement).value as SortOrder;
+		setSortOrder(val);
+		await sortOrderPref.setValue(val);
 	};
+
+	const handleClearAll = () => setShowClearConfirm(true);
 
 	const confirmClearAll = async () => {
 		await favorites.setValue([]);
@@ -94,9 +172,7 @@ function App() {
 		await refreshList();
 	};
 
-	const cancelClearAll = () => {
-		setShowClearConfirm(false);
-	};
+	const cancelClearAll = () => setShowClearConfirm(false);
 
 	const openLink = (href: string) => {
 		const url = href.startsWith("http") ? href : `https://www.skills.sh${href}`;
@@ -123,6 +199,17 @@ function App() {
 				</button>
 				<div class="header-right">
 					<Show when={list().length > 0}>
+						<select
+							class="sort-select"
+							value={sortOrder()}
+							onChange={handleSortChange}
+							title="Sort order"
+							aria-label="Sort order"
+						>
+							<option value="added">Recent</option>
+							<option value="name">A-Z</option>
+							<option value="installs">Installs</option>
+						</select>
 						<button
 							onClick={handleClearAll}
 							class="clear-all-btn"
@@ -147,15 +234,13 @@ function App() {
 							stroke-linejoin="round"
 							class="settings-icon"
 						>
-							<title>Backup Settings</title>
+							<title>Settings</title>
 							<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.1a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
 							<circle cx="12" cy="12" r="3" />
 						</svg>
 					</button>
 				</div>
 			</header>
-
-
 
 			{/* Search Box */}
 			<div class="search-box">
@@ -174,8 +259,10 @@ function App() {
 					<path d="m21 21-4.3-4.3" />
 				</svg>
 				<input
+					ref={searchInputRef}
+					id="popup-search"
 					type="text"
-					placeholder="Search favorites..."
+					placeholder="Search... (Cmd+F)"
 					value={search()}
 					onInput={(e) => setSearch(e.currentTarget.value)}
 					class="search-input"
@@ -219,7 +306,7 @@ function App() {
 			{/* Main Content Area */}
 			<div class="popup-body">
 				<Show
-					when={filteredList().length > 0}
+					when={list().length > 0}
 					fallback={
 						<div class="empty-state">
 							<div class="empty-icon-wrapper">
@@ -237,37 +324,53 @@ function App() {
 									<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
 								</svg>
 							</div>
-							<p class="empty-title">
-								{list().length === 0
-									? "No starred skills yet"
-									: "No matches found"}
-							</p>
+							<p class="empty-title">No starred skills yet</p>
 							<p class="empty-desc">
-								{list().length === 0
-									? "Star skills in the directory to quickly access them here in your extensions panel."
-									: "Try typing a different search query to locate your starred skill."}
+								Star skills in the directory to quickly access them here.
 							</p>
-							<Show when={list().length === 0}>
-								<button onClick={openHome} class="browse-btn" type="button">
-									Explore Registry
-								</button>
-							</Show>
+							<button onClick={openHome} class="browse-btn" type="button">
+								Explore Registry
+							</button>
 						</div>
 					}
 				>
-					<div class="skills-list">
-						<For each={filteredList()}>
-							{(skill) => (
-								<SkillCard
-									skill={skill}
-									onRemove={handleRemove}
-									onSaveTag={handleSaveTag}
-									onRemoveTag={handleRemoveTag}
-									openLink={openLink}
-								/>
-							)}
-						</For>
-					</div>
+					{(() => {
+						const { pinnedItems, unpinnedItems } = splitList();
+						const allVisible = [...pinnedItems, ...unpinnedItems];
+						return (
+							<div class="skills-list">
+								<Show when={allVisible.length === 0}>
+									<p class="no-results-text">No matches found.</p>
+								</Show>
+								<For each={pinnedItems}>
+									{(skill) => (
+										<SkillCard
+											skill={skill}
+											pinned={true}
+											onRemove={handleRemove}
+											onTogglePin={handleTogglePin}
+											onSaveTag={handleSaveTag}
+											onRemoveTag={handleRemoveTag}
+											openLink={openLink}
+										/>
+									)}
+								</For>
+								<For each={unpinnedItems}>
+									{(skill) => (
+										<SkillCard
+											skill={skill}
+											pinned={false}
+											onRemove={handleRemove}
+											onTogglePin={handleTogglePin}
+											onSaveTag={handleSaveTag}
+											onRemoveTag={handleRemoveTag}
+											openLink={openLink}
+										/>
+									)}
+								</For>
+							</div>
+						);
+					})()}
 				</Show>
 			</div>
 
@@ -292,7 +395,7 @@ function App() {
 				</button>
 			</footer>
 
-			{/* Clear All Confirmation Modal Overlay */}
+			{/* Clear All Confirmation Modal */}
 			<ConfirmModal
 				show={showClearConfirm()}
 				title="Clear Favorites"

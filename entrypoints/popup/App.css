@@ -858,3 +858,91 @@
 	border-color: #dc2626;
 	box-shadow: 0 0 8px rgba(239, 68, 68, 0.25);
 }
+
+/* Sort order select in header */
+.sort-select {
+	font-size: 10px;
+	font-weight: 500;
+	color: #a3a3a3;
+	background-color: transparent;
+	border: 1px solid #262626;
+	border-radius: 6px;
+	padding: 4px 6px;
+	cursor: pointer;
+	outline: none;
+	transition: all 0.2s ease;
+	font-family: inherit;
+}
+
+.sort-select:hover,
+.sort-select:focus {
+	color: #ffffff;
+	border-color: #404040;
+}
+
+.sort-select option {
+	background-color: #0c0c0c;
+	color: #ffffff;
+}
+
+/* Pin button */
+.pin-btn {
+	background: transparent;
+	border: none;
+	color: #404040;
+	padding: 6px;
+	border-radius: 6px;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transition: all 0.2s ease;
+}
+
+.pin-btn:hover {
+	color: #eab308;
+	background-color: rgba(234, 179, 8, 0.08);
+}
+
+.pin-btn.active {
+	color: #eab308;
+}
+
+.pin-icon {
+	width: 13px;
+	height: 13px;
+}
+
+/* Pinned card visual treatment */
+.skill-card.pinned {
+	border-color: rgba(234, 179, 8, 0.25);
+	background-color: rgba(234, 179, 8, 0.03);
+}
+
+.skill-card.pinned:hover {
+	border-color: rgba(234, 179, 8, 0.45);
+	background-color: rgba(234, 179, 8, 0.06);
+}
+
+/* Small star/pin indicator next to skill name */
+.pin-indicator {
+	display: inline-flex;
+	align-items: center;
+	margin-right: 4px;
+	color: #eab308;
+	vertical-align: middle;
+}
+
+.pin-dot-icon {
+	width: 8px;
+	height: 8px;
+}
+
+/* No-results text inside list */
+.no-results-text {
+	font-size: 12px;
+	color: #525252;
+	text-align: center;
+	padding: 24px 0;
+	margin: 0;
+}

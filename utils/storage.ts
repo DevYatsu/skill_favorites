@@ -12,14 +12,33 @@ export interface FavoriteSkill {
 }
 
 export type PackageManager = "npx" | "bunx" | "pnpm dlx";
+export type SortOrder = "added" | "name" | "installs";
 
 export const packageManagerPref = storage.defineItem<PackageManager>("sync:packageManager", { fallback: "npx", version: 1 });
+export const sortOrderPref = storage.defineItem<SortOrder>("sync:sortOrder", { fallback: "added", version: 1 });
+export const pinnedSkills = storage.defineItem<string[]>("sync:pinnedSkills", { fallback: [], version: 1 });
 
 export const favorites = storage.defineItem<FavoriteSkill[]>("sync:favorites", { fallback: [], version: 1 });
 
 export async function isFavorite(id: string): Promise<boolean> {
 	const current = await favorites.getValue();
 	return current.some((s: FavoriteSkill) => s.id === id);
+}
+
+export async function isPinned(id: string): Promise<boolean> {
+	const pins = await pinnedSkills.getValue();
+	return pins.includes(id);
+}
+
+export async function togglePin(id: string): Promise<void> {
+	const pins = await pinnedSkills.getValue();
+	if (pins.includes(id)) {
+		await pinnedSkills.setValue(pins.filter((p) => p !== id));
+	} else {
+		// why: cap at 5 pins to prevent the pinned section from dominating the list
+		const capped = pins.slice(-4);
+		await pinnedSkills.setValue([...capped, id]);
+	}
 }
 
 export async function addFavorite(
@@ -36,6 +55,11 @@ export async function addFavorite(
 export async function removeFavorite(id: string): Promise<void> {
 	const current = await favorites.getValue();
 	await favorites.setValue(current.filter((s: FavoriteSkill) => s.id !== id));
+	// Clean up pin state when skill is removed
+	const pins = await pinnedSkills.getValue();
+	if (pins.includes(id)) {
+		await pinnedSkills.setValue(pins.filter((p) => p !== id));
+	}
 }
 
 export async function addSkillTag(id: string, tag: string): Promise<void> {
