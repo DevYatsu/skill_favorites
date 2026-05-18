@@ -1,5 +1,5 @@
 import { createSignal, Show, onMount } from "solid-js";
-import { type FavoriteSkill, favorites, packageManagerPref, type PackageManager } from "@/utils/storage";
+import { type FavoriteSkill, favorites, packageManagerPref, type PackageManager, storageModePref, type StorageMode } from "@/utils/storage";
 
 export default function Options() {
 	const [settingsMessage, setSettingsMessage] = createSignal<{
@@ -8,9 +8,11 @@ export default function Options() {
 	} | null>(null);
 
 	const [pm, setPm] = createSignal<PackageManager>("npx");
+	const [storageMode, setStorageMode] = createSignal<StorageMode>("local");
 
 	onMount(async () => {
 		setPm(await packageManagerPref.getValue());
+		setStorageMode(await storageModePref.getValue());
 	});
 
 	const handlePmChange = async (e: Event) => {
@@ -18,6 +20,15 @@ export default function Options() {
 		const val = target.value as PackageManager;
 		setPm(val);
 		await packageManagerPref.setValue(val);
+	};
+
+	const handleModeChange = async (e: Event) => {
+		const target = e.target as HTMLSelectElement;
+		const val = target.value as StorageMode;
+		setStorageMode(val);
+		await storageModePref.setValue(val);
+		// Refresh other settings based on the new storage backend
+		setPm(await packageManagerPref.getValue());
 	};
 
 	const handleExportJSON = async () => {
@@ -145,7 +156,20 @@ export default function Options() {
 
 				<div class="settings-section">
 					<div class="settings-section-title">
-						CLI Preferences
+						Extension Preferences
+					</div>
+					<div class="mb-4">
+						<label class="options-label" for="mode-select">Storage Location</label>
+						<select
+							id="mode-select"
+							value={storageMode()}
+							onChange={handleModeChange}
+							class="options-select"
+						>
+							<option value="local">Local (This device only)</option>
+							<option value="sync">Sync (Across signed-in browsers)</option>
+						</select>
+						<p class="options-note">Note: Firefox requires you to be signed in to a Firefox Account for Sync to work. Switching modes will not migrate your existing data.</p>
 					</div>
 					<div>
 						<label class="options-label" for="pm-select">Default Package Manager</label>
