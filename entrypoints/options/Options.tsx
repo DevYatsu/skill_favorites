@@ -148,8 +148,9 @@ export default function Options() {
 						CLI Preferences
 					</div>
 					<div>
-						<label class="options-label">Default Package Manager</label>
+						<label class="options-label" for="pm-select">Default Package Manager</label>
 						<select
+							id="pm-select"
 							value={pm()}
 							onChange={handlePmChange}
 							class="options-select"
