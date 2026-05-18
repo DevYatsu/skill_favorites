@@ -11,7 +11,7 @@ export interface FavoriteSkill {
 	tags?: string[]; // Optional user tags
 }
 
-export const favorites = storage.defineItem<FavoriteSkill[]>("sync:favorites", {
+export const favorites = storage.defineItem<FavoriteSkill[]>("local:favorites", {
 	fallback: [],
 	version: 1,
 });
