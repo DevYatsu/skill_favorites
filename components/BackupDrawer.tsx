@@ -132,11 +132,12 @@ export function BackupDrawer(props: BackupDrawerProps) {
 	};
 
 	const handleLabelClick = async (e: MouseEvent) => {
-		// If we are in a small popup window, the OS file picker will close it (breaking the script).
-		// We intercept the click, stop the picker, and open the extension in a full tab instead.
-		if (window.innerWidth < 800) {
+		// If we are in a small popup window on Firefox, the OS file picker will close it (breaking the script).
+		// We intercept the click, stop the picker, and open the extension in a full options tab instead.
+		const isFirefox = navigator.userAgent.toLowerCase().includes("firefox");
+		if (isFirefox && window.innerWidth < 800) {
 			e.preventDefault();
-			const url = browser.runtime.getURL("/popup.html");
+			const url = browser.runtime.getURL("/options.html");
 			await browser.tabs.create({ url });
 			window.close();
 		}
