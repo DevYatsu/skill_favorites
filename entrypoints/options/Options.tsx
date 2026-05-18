@@ -1,11 +1,24 @@
-import { createSignal, Show } from "solid-js";
-import { type FavoriteSkill, favorites } from "@/utils/storage";
+import { createSignal, Show, onMount } from "solid-js";
+import { type FavoriteSkill, favorites, packageManagerPref, type PackageManager } from "@/utils/storage";
 
 export default function Options() {
 	const [settingsMessage, setSettingsMessage] = createSignal<{
 		type: "success" | "error";
 		text: string;
 	} | null>(null);
+
+	const [pm, setPm] = createSignal<PackageManager>("npx");
+
+	onMount(async () => {
+		setPm(await packageManagerPref.getValue());
+	});
+
+	const handlePmChange = async (e: Event) => {
+		const target = e.target as HTMLSelectElement;
+		const val = target.value as PackageManager;
+		setPm(val);
+		await packageManagerPref.setValue(val);
+	};
 
 	const handleExportJSON = async () => {
 		try {
@@ -128,6 +141,24 @@ export default function Options() {
 				<div class="options-header">
 					<h1 class="options-title">skills-favorites Options</h1>
 					<p class="options-subtitle">Manage your configuration and backups.</p>
+				</div>
+
+				<div class="settings-section">
+					<div class="settings-section-title">
+						CLI Preferences
+					</div>
+					<div>
+						<label class="options-label">Default Package Manager</label>
+						<select
+							value={pm()}
+							onChange={handlePmChange}
+							class="options-select"
+						>
+							<option value="npx">npx (npm)</option>
+							<option value="bunx">bunx (bun)</option>
+							<option value="pnpm dlx">pnpm dlx (pnpm)</option>
+						</select>
+					</div>
 				</div>
 
 				<div class="settings-section">

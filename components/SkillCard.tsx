@@ -1,6 +1,6 @@
 // components/SkillCard.tsx
 import { createSignal, Show, For } from "solid-js";
-import type { FavoriteSkill } from "@/utils/storage";
+import { type FavoriteSkill, packageManagerPref } from "@/utils/storage";
 
 interface SkillCardProps {
 	skill: FavoriteSkill;
@@ -18,7 +18,8 @@ export function SkillCard(props: SkillCardProps) {
 	const handleCopy = async (e: MouseEvent) => {
 		e.preventDefault();
 		e.stopPropagation();
-		const command = `npx skills add https://github.com/${props.skill.ownerRepo} --skill ${props.skill.name}`;
+		const pm = await packageManagerPref.getValue();
+		const command = `${pm} skills add https://github.com/${props.skill.ownerRepo} --skill ${props.skill.name}`;
 		try {
 			await navigator.clipboard.writeText(command);
 			setIsCopied(true);

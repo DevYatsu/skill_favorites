@@ -16,6 +16,13 @@ export const favorites = storage.defineItem<FavoriteSkill[]>("local:favorites", 
 	version: 1,
 });
 
+export type PackageManager = "npx" | "bunx" | "pnpm dlx";
+
+export const packageManagerPref = storage.defineItem<PackageManager>("local:packageManager", {
+	fallback: "npx",
+	version: 1,
+});
+
 export async function isFavorite(id: string): Promise<boolean> {
 	const current = await favorites.getValue();
 	return current.some((s: FavoriteSkill) => s.id === id);
