@@ -11,8 +11,18 @@ export interface FavoriteSkill {
   tags?: string[]; // Optional user tags
 }
 
-export const favorites = storage.defineItem<FavoriteSkill[]>('local:favorites', {
+export const favorites = storage.defineItem<FavoriteSkill[]>('sync:favorites', {
   fallback: [],
+  version: 2,
+  migrations: {
+    2: (oldFavs: any[]): FavoriteSkill[] => {
+      if (!Array.isArray(oldFavs)) return [];
+      return oldFavs.map((fav) => ({
+        ...fav,
+        tags: fav.tags || [],
+      }));
+    },
+  },
 });
 
 export async function isFavorite(id: string): Promise<boolean> {

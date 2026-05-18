@@ -1,7 +1,7 @@
 // components/FavoriteButton.tsx
 import { render } from 'solid-js/web';
-import { createSignal, onMount } from 'solid-js';
-import { addFavorite, removeFavorite, isFavorite } from '@/utils/storage';
+import { createSignal, onMount, onCleanup } from 'solid-js';
+import { addFavorite, removeFavorite, isFavorite, favorites } from '@/utils/storage';
 
 interface FavoriteButtonProps {
   id: string;
@@ -36,7 +36,17 @@ export function FavoriteButton(props: FavoriteButtonProps) {
 
   onMount(async () => {
     setActive(await isFavorite(props.id));
+
+    const unwatch = favorites.watch((newFavs) => {
+      const isFav = (newFavs || []).some((s) => s.id === props.id);
+      setActive(isFav);
+    });
+
     btnRef?.addEventListener('click', handleToggle);
+
+    onCleanup(() => {
+      unwatch();
+    });
   });
 
   return (
