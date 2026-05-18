@@ -9,6 +9,11 @@ export default defineConfig({
 			"Add a local favorites list and starring capability to skills.sh.",
 		permissions: ["storage"],
 		host_permissions: ["*://*.skills.sh/*"],
+		browser_specific_settings: {
+			gecko: {
+				id: "skills-favorites@devyatsu.com",
+			},
+		},
 		icons: {
 			"16": "/icon/16.png",
 			"32": "/icon/32.png",
