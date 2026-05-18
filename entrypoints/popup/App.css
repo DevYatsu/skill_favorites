@@ -221,14 +221,25 @@
 
 .skill-card {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  gap: 8px;
   padding: 10px 12px;
   border: 1px solid #141414;
   border-radius: 8px;
   background-color: rgba(255, 255, 255, 0.01);
   cursor: pointer;
   transition: all 0.2s ease;
+}
+
+.skill-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.skill-card-bottom {
+  width: 100%;
 }
 
 .skill-card:hover {
@@ -370,5 +381,144 @@
 .arrow-right-icon {
   width: 12px;
   height: 12px;
+}
+
+/* Dynamic Tags Filter Bar */
+.tag-filters-row {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 2px 16px 10px 16px;
+  margin-top: 2px;
+  flex-shrink: 0;
+  scrollbar-width: none; /* Firefox */
+}
+
+.tag-filters-row::-webkit-scrollbar {
+  display: none; /* Safari and Chrome */
+}
+
+.tag-filter-pill {
+  font-size: 10px;
+  font-weight: 500;
+  color: #a3a3a3;
+  background-color: #0c0c0c;
+  border: 1px solid #1a1a1a;
+  padding: 4px 10px;
+  border-radius: 9999px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+
+.tag-filter-pill:hover {
+  color: #ffffff;
+  border-color: #404040;
+  background-color: #141414;
+}
+
+.tag-filter-pill.active {
+  color: #000000;
+  background-color: #ffffff;
+  border-color: #ffffff;
+  font-weight: 600;
+}
+
+/* In-card tags styling */
+.skill-tags-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.skill-tag-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9px;
+  font-family: monospace;
+  font-weight: 600;
+  color: #a3a3a3;
+  background-color: #0c0c0c;
+  border: 1px solid #1a1a1a;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: all 0.15s ease;
+}
+
+.skill-card:hover .skill-tag-pill {
+  border-color: #262626;
+  color: #ffffff;
+}
+
+.delete-tag-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: #737373;
+  padding: 0;
+  font-size: 10px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s ease;
+}
+
+.delete-tag-btn:hover {
+  color: #ef4444;
+}
+
+/* Inline Tag Adder Controls */
+.add-tag-trigger {
+  font-size: 9px;
+  font-weight: 500;
+  color: #525252;
+  background: transparent;
+  border: 1px dashed #1a1a1a;
+  padding: 2px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.skill-card:hover .add-tag-trigger {
+  border-color: #262626;
+  color: #a3a3a3;
+}
+
+.add-tag-trigger:hover {
+  border-color: #ffffff !important;
+  color: #ffffff !important;
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+.inline-tag-form {
+  display: inline-flex;
+  align-items: center;
+}
+
+.inline-tag-input {
+  font-size: 9px;
+  font-family: monospace;
+  color: #ffffff;
+  background-color: #0c0c0c;
+  border: 1px solid #eab308;
+  border-radius: 4px;
+  padding: 1px 6px;
+  outline: none;
+  width: 50px;
+  transition: width 0.2s ease;
+}
+
+.inline-tag-input:focus {
+  width: 70px;
+  box-shadow: 0 0 4px rgba(234, 179, 8, 0.2);
+}
+
+.inline-tag-input::placeholder {
+  color: #404040;
 }
 
