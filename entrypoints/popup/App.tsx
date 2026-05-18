@@ -8,7 +8,6 @@ import {
 	type FavoriteSkill,
 } from "@/utils/storage";
 import { SkillCard } from "@/components/SkillCard";
-import { BackupDrawer } from "@/components/BackupDrawer";
 import { ConfirmModal } from "@/components/ConfirmModal";
 import "./App.css";
 
@@ -16,7 +15,6 @@ function App() {
 	const [list, setList] = createSignal<FavoriteSkill[]>([]);
 	const [search, setSearch] = createSignal("");
 	const [selectedTag, setSelectedTag] = createSignal("");
-	const [showSettings, setShowSettings] = createSignal(false);
 	const [showClearConfirm, setShowClearConfirm] = createSignal(false);
 
 	// Read favorites reactively
@@ -123,9 +121,9 @@ function App() {
 						</button>
 					</Show>
 					<button
-						onClick={() => setShowSettings(!showSettings())}
+						onClick={() => browser.runtime.openOptionsPage()}
 						class="settings-btn"
-						title="Backup Settings"
+						title="Settings"
 						type="button"
 					>
 						<svg
@@ -146,12 +144,7 @@ function App() {
 				</div>
 			</header>
 
-			{/* Settings Drawer */}
-			<BackupDrawer
-				show={showSettings()}
-				onClose={() => setShowSettings(false)}
-				list={list}
-			/>
+
 
 			{/* Search Box */}
 			<div class="search-box">
