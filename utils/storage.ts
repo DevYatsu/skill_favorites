@@ -13,16 +13,7 @@ export interface FavoriteSkill {
 
 export const favorites = storage.defineItem<FavoriteSkill[]>('sync:favorites', {
   fallback: [],
-  version: 2,
-  migrations: {
-    2: (oldFavs: any[]): FavoriteSkill[] => {
-      if (!Array.isArray(oldFavs)) return [];
-      return oldFavs.map((fav) => ({
-        ...fav,
-        tags: fav.tags || [],
-      }));
-    },
-  },
+  version: 1,
 });
 
 export async function isFavorite(id: string): Promise<boolean> {
