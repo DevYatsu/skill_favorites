@@ -1,388 +1,301 @@
 // entrypoints/popup/App.tsx
-import { createSignal, For, Show, onMount } from 'solid-js';
-import { favorites, removeFavorite, addSkillTag, removeSkillTag, FavoriteSkill } from '@/utils/storage';
-import './App.css';
+import { createSignal, For, Show, onMount } from "solid-js";
+import {
+	favorites,
+	removeFavorite,
+	addSkillTag,
+	removeSkillTag,
+	FavoriteSkill,
+} from "@/utils/storage";
+import { SkillCard } from "@/components/SkillCard";
+import { BackupDrawer } from "@/components/BackupDrawer";
+import { ConfirmModal } from "@/components/ConfirmModal";
+import "./App.css";
 
 function App() {
-  const [list, setList] = createSignal<FavoriteSkill[]>([]);
-  const [search, setSearch] = createSignal('');
-  const [selectedTag, setSelectedTag] = createSignal('');
-  const [editingId, setEditingId] = createSignal('');
-  const [newTagText, setNewTagText] = createSignal('');
-  const [copiedId, setCopiedId] = createSignal('');
+	const [list, setList] = createSignal<FavoriteSkill[]>([]);
+	const [search, setSearch] = createSignal("");
+	const [selectedTag, setSelectedTag] = createSignal("");
+	const [showSettings, setShowSettings] = createSignal(false);
+	const [showClearConfirm, setShowClearConfirm] = createSignal(false);
 
-  // Read favorites reactively
-  favorites.watch((newFavs) => {
-    setList(newFavs || []);
-  });
+	// Read favorites reactively
+	favorites.watch((newFavs) => {
+		setList(newFavs || []);
+	});
 
-  // Initial load
-  onMount(async () => {
-    const initial = await favorites.getValue();
-    setList(initial || []);
-  });
+	// Initial load
+	onMount(async () => {
+		const initial = await favorites.getValue();
+		setList(initial || []);
+	});
 
-  // Calculate unique tags present across all starred skills
-  const allTags = () => {
-    const tagsSet = new Set<string>();
-    list().forEach((s) => {
-      if (s.tags) {
-        s.tags.forEach((t) => tagsSet.add(t));
-      }
-    });
-    return Array.from(tagsSet).sort();
-  };
+	// Calculate unique tags present across all starred skills
+	const allTags = () => {
+		const tagsSet = new Set<string>();
+		list().forEach((s) => {
+			if (s.tags) {
+				s.tags.forEach((t) => tagsSet.add(t));
+			}
+		});
+		return Array.from(tagsSet).sort();
+	};
 
-  const filteredList = () => {
-    const query = search().toLowerCase().trim();
-    const tag = selectedTag();
+	// Multi-criteria filter: search query match AND category tag pill match
+	const filteredList = () => {
+		let current = list();
+		const query = search().trim().toLowerCase();
 
-    return list().filter((s) => {
-      const matchesQuery =
-        !query ||
-        s.name.toLowerCase().includes(query) ||
-        s.ownerRepo.toLowerCase().includes(query);
+		if (query) {
+			current = current.filter(
+				(s) =>
+					s.name.toLowerCase().includes(query) ||
+					s.ownerRepo.toLowerCase().includes(query),
+			);
+		}
 
-      const matchesTag = !tag || (s.tags && s.tags.includes(tag));
+		const tag = selectedTag();
+		if (tag) {
+			current = current.filter((s) => s.tags?.includes(tag));
+		}
 
-      return matchesQuery && matchesTag;
-    });
-  };
+		return current;
+	};
 
-  const handleRemove = async (id: string, e: MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    await removeFavorite(id);
-  };
+	const handleRemove = async (id: string, e: MouseEvent) => {
+		e.preventDefault();
+		e.stopPropagation();
+		await removeFavorite(id);
+	};
 
-  const handleSaveTag = async (id: string) => {
-    const tagText = newTagText().trim().toLowerCase();
-    setEditingId('');
-    setNewTagText('');
-    if (tagText) {
-      await addSkillTag(id, tagText);
-    }
-  };
+	const handleSaveTag = async (id: string, tag: string) => {
+		await addSkillTag(id, tag);
+	};
 
-  const handleCopyCommand = async (skill: FavoriteSkill, e: MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const command = `npx skills add https://github.com/${skill.ownerRepo} --skill ${skill.name}`;
-    try {
-      await navigator.clipboard.writeText(command);
-      setCopiedId(skill.id);
-      setTimeout(() => {
-        if (copiedId() === skill.id) {
-          setCopiedId('');
-        }
-      }, 1500);
-    } catch (err) {
-      console.error('Failed to copy command: ', err);
-    }
-  };
+	const handleRemoveTag = async (id: string, tag: string) => {
+		await removeSkillTag(id, tag);
+	};
 
-  const handleClearAll = async () => {
-    if (confirm('Are you sure you want to remove all favorited skills?')) {
-      await favorites.setValue([]);
-    }
-  };
+	const handleClearAll = () => {
+		setShowClearConfirm(true);
+	};
 
-  const openLink = (href: string) => {
-    const url = href.startsWith('http') ? href : `https://www.skills.sh${href}`;
-    browser.tabs.create({ url });
-  };
+	const confirmClearAll = async () => {
+		await favorites.setValue([]);
+		setShowClearConfirm(false);
+	};
 
-  const openHome = () => {
-    browser.tabs.create({ url: 'https://www.skills.sh/' });
-  };
+	const cancelClearAll = () => {
+		setShowClearConfirm(false);
+	};
 
-  return (
-    <div class="popup-container">
-      {/* Header */}
-      <header class="popup-header">
-        <div class="header-left" onClick={openHome}>
-          <span class="logo-accent">skills</span>
-          <span class="logo-slash">/</span>
-          <span class="logo-sub">favs</span>
-        </div>
-        <Show when={list().length > 0}>
-          <button onClick={handleClearAll} class="clear-all-btn">
-            Clear All
-          </button>
-        </Show>
-      </header>
+	const openLink = (href: string) => {
+		const url = href.startsWith("http") ? href : `https://www.skills.sh${href}`;
+		browser.tabs.create({ url });
+	};
 
-      {/* Search Input */}
-      <Show when={list().length > 0}>
-        <div class="search-box">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2.5"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="search-icon"
-          >
-            <circle cx="11" cy="11" r="8" />
-            <path d="m21 21-4.3-4.3" />
-          </svg>
-          <input
-            type="text"
-            placeholder="Search starred skills..."
-            value={search()}
-            onInput={(e) => setSearch(e.currentTarget.value)}
-            class="search-input"
-          />
-          <Show when={search().length > 0}>
-            <button onClick={() => setSearch('')} class="clear-search-btn" title="Clear search">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="close-icon">
-                <path d="M18 6 6 18" />
-                <path d="m6 6 12 12" />
-              </svg>
-            </button>
-          </Show>
-        </div>
-      </Show>
+	const openHome = () => {
+		browser.tabs.create({ url: "https://www.skills.sh/" });
+	};
 
-      {/* Dynamic Tags Filter Bar */}
-      <Show when={list().length > 0 && allTags().length > 0}>
-        <div class="tag-filters-row">
-          <button
-            class="tag-filter-pill"
-            classList={{ active: selectedTag() === '' }}
-            onClick={() => setSelectedTag('')}
-          >
-            All
-          </button>
-          <For each={allTags()}>
-            {(tag) => (
-              <button
-                class="tag-filter-pill"
-                classList={{ active: selectedTag() === tag }}
-                onClick={() => setSelectedTag(tag)}
-              >
-                {tag}
-              </button>
-            )}
-          </For>
-        </div>
-      </Show>
+	return (
+		<div class="popup-container">
+			{/* Header */}
+			<header class="popup-header">
+				<button
+					class="header-left"
+					onClick={openHome}
+					title="skills.sh home"
+					type="button"
+				>
+					<span class="logo-accent">skills</span>
+					<span class="logo-slash">/</span>
+					<span class="logo-sub">favs</span>
+				</button>
+				<div class="header-right">
+					<Show when={list().length > 0}>
+						<button
+							onClick={handleClearAll}
+							class="clear-all-btn"
+							type="button"
+						>
+							Clear All
+						</button>
+					</Show>
+					<button
+						onClick={() => setShowSettings(!showSettings())}
+						class="settings-btn"
+						title="Backup Settings"
+						type="button"
+					>
+						<svg
+							xmlns="http://www.w3.org/2000/svg"
+							viewBox="0 0 24 24"
+							fill="none"
+							stroke="currentColor"
+							stroke-width="2"
+							stroke-linecap="round"
+							stroke-linejoin="round"
+							class="settings-icon"
+						>
+							<title>Backup Settings</title>
+							<path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.1a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" />
+							<circle cx="12" cy="12" r="3" />
+						</svg>
+					</button>
+				</div>
+			</header>
 
-      {/* Main Content Area */}
-      <div class="popup-body">
-        <Show
-          when={filteredList().length > 0}
-          fallback={
-            <div class="empty-state">
-              <div class="empty-icon-wrapper">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  class="star-icon"
-                >
-                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-                </svg>
-              </div>
-              <p class="empty-title">
-                {list().length === 0 ? 'No starred skills yet' : 'No matches found'}
-              </p>
-              <p class="empty-desc">
-                {list().length === 0
-                  ? 'Star skills in the directory to quickly access them here in your extensions panel.'
-                  : 'Try typing a different search query to locate your starred skill.'
-                }
-              </p>
-              <Show when={list().length === 0}>
-                <button onClick={openHome} class="browse-btn">
-                  Explore Registry
-                </button>
-              </Show>
-            </div>
-          }
-        >
-          <div class="skills-list">
-            <For each={filteredList()}>
-              {(skill) => (
-                <div class="skill-card" onClick={() => openLink(skill.href)}>
-                  {/* Top card block */}
-                  <div class="skill-card-top">
-                    <div class="skill-main">
-                      <div class="skill-avatar">
-                        {skill.name.charAt(0).toUpperCase()}
-                      </div>
-                      <div class="skill-info">
-                        <div class="skill-name">{skill.name}</div>
-                        <div class="skill-repo">{skill.ownerRepo}</div>
-                      </div>
-                    </div>
-                    <div class="skill-side" onClick={(e) => e.stopPropagation()}>
-                      <Show when={skill.installs}>
-                        <span class="installs-tag">{skill.installs}</span>
-                      </Show>
-                      <button
-                        onClick={(e) => handleCopyCommand(skill, e)}
-                        class="copy-btn"
-                        classList={{ copied: copiedId() === skill.id }}
-                        title={copiedId() === skill.id ? "Copied!" : "Copy installation command"}
-                        aria-label="Copy installation command"
-                        type="button"
-                      >
-                        <Show
-                          when={copiedId() === skill.id}
-                          fallback={
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              stroke-width="2"
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              class="copy-icon"
-                            >
-                              <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
-                              <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
-                            </svg>
-                          }
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="#10b981"
-                            stroke-width="2.5"
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            class="copy-icon check-icon"
-                          >
-                            <path d="M20 6 9 17l-5-5" />
-                          </svg>
-                        </Show>
-                      </button>
-                      <button
-                        onClick={(e) => handleRemove(skill.id, e)}
-                        class="remove-btn"
-                        aria-label="Remove skill"
-                        type="button"
-                      >
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          stroke-width="2"
-                          stroke-linecap="round"
-                          stroke-linejoin="round"
-                          class="trash-icon"
-                        >
-                          <path d="M3 6h18" />
-                          <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                          <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                        </svg>
-                      </button>
-                    </div>
-                  </div>
+			{/* Settings Drawer */}
+			<BackupDrawer
+				show={showSettings()}
+				onClose={() => setShowSettings(false)}
+				list={list}
+			/>
 
-                  {/* Bottom tagging block */}
-                  <div class="skill-card-bottom" onClick={(e) => e.stopPropagation()}>
-                    <div class="skill-tags-list">
-                      <For each={skill.tags || []}>
-                        {(tag) => (
-                          <span class="skill-tag-pill">
-                            {tag}
-                            <button
-                              class="delete-tag-btn"
-                              onClick={() => removeSkillTag(skill.id, tag)}
-                              title="Remove tag"
-                              type="button"
-                            >
-                              &times;
-                            </button>
-                          </span>
-                        )}
-                      </For>
+			{/* Search Box */}
+			<div class="search-box">
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					stroke-width="2"
+					stroke-linecap="round"
+					stroke-linejoin="round"
+					class="search-icon"
+				>
+					<title>Search</title>
+					<circle cx="11" cy="11" r="8" />
+					<path d="m21 21-4.3-4.3" />
+				</svg>
+				<input
+					type="text"
+					placeholder="Search favorites..."
+					value={search()}
+					onInput={(e) => setSearch(e.currentTarget.value)}
+					class="search-input"
+				/>
+				<Show when={search()}>
+					<button
+						onClick={() => setSearch("")}
+						class="clear-search-btn"
+						title="Clear search"
+						type="button"
+					>
+						&times;
+					</button>
+				</Show>
+			</div>
 
-                      {/* Inline Tag Adder Form */}
-                      <Show
-                        when={editingId() === skill.id}
-                        fallback={
-                          <button
-                            class="add-tag-trigger"
-                            onClick={() => setEditingId(skill.id)}
-                            title="Add tag"
-                            type="button"
-                          >
-                            + Tag
-                          </button>
-                        }
-                      >
-                        <form
-                          class="inline-tag-form"
-                          onSubmit={(e) => {
-                            e.preventDefault();
-                            handleSaveTag(skill.id);
-                          }}
-                        >
-                          <input
-                            ref={(el) => setTimeout(() => el?.focus(), 50)}
-                            type="text"
-                            class="inline-tag-input"
-                            placeholder="tag..."
-                            value={newTagText()}
-                            onInput={(e) => setNewTagText(e.currentTarget.value)}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Escape') {
-                                setEditingId('');
-                                setNewTagText('');
-                              }
-                            }}
-                            onBlur={() => {
-                              setTimeout(() => {
-                                if (editingId() === skill.id) {
-                                  handleSaveTag(skill.id);
-                                }
-                              }, 180);
-                            }}
-                          />
-                        </form>
-                      </Show>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </For>
-          </div>
-        </Show>
-      </div>
+			{/* Horizontal Tag Filters Pill Row */}
+			<div class="tag-filters-row">
+				<button
+					onClick={() => setSelectedTag("")}
+					class="tag-filter-pill"
+					classList={{ active: selectedTag() === "" }}
+					type="button"
+				>
+					All
+				</button>
+				<For each={allTags()}>
+					{(tag) => (
+						<button
+							onClick={() => setSelectedTag(selectedTag() === tag ? "" : tag)}
+							class="tag-filter-pill"
+							classList={{ active: selectedTag() === tag }}
+							type="button"
+						>
+							{tag}
+						</button>
+					)}
+				</For>
+			</div>
 
-      {/* Footer Dashboard Link */}
-      <footer class="popup-footer">
-        <button onClick={openHome} class="dashboard-btn" type="button">
-          <span>Explore More Skills</span>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            class="arrow-right-icon"
-          >
-            <path d="M5 12h14" />
-            <path d="m12 5 7 7-7 7" />
-          </svg>
-        </button>
-      </footer>
-    </div>
-  );
+			{/* Main Content Area */}
+			<div class="popup-body">
+				<Show
+					when={filteredList().length > 0}
+					fallback={
+						<div class="empty-state">
+							<div class="empty-icon-wrapper">
+								<svg
+									xmlns="http://www.w3.org/2000/svg"
+									viewBox="0 0 24 24"
+									fill="none"
+									stroke="currentColor"
+									stroke-width="1.5"
+									stroke-linecap="round"
+									stroke-linejoin="round"
+									class="star-icon"
+								>
+									<title>Star icon</title>
+									<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+								</svg>
+							</div>
+							<p class="empty-title">
+								{list().length === 0 ? "No starred skills yet" : "No matches found"}
+							</p>
+							<p class="empty-desc">
+								{list().length === 0
+									? "Star skills in the directory to quickly access them here in your extensions panel."
+									: "Try typing a different search query to locate your starred skill."}
+							</p>
+							<Show when={list().length === 0}>
+								<button onClick={openHome} class="browse-btn" type="button">
+									Explore Registry
+								</button>
+							</Show>
+						</div>
+					}
+				>
+					<div class="skills-list">
+						<For each={filteredList()}>
+							{(skill) => (
+								<SkillCard
+									skill={skill}
+									onRemove={handleRemove}
+									onSaveTag={handleSaveTag}
+									onRemoveTag={handleRemoveTag}
+									openLink={openLink}
+								/>
+							)}
+						</For>
+					</div>
+				</Show>
+			</div>
+
+			{/* Footer Dashboard Link */}
+			<footer class="popup-footer">
+				<button onClick={openHome} class="dashboard-btn" type="button">
+					<span>Explore More Skills</span>
+					<svg
+						xmlns="http://www.w3.org/2000/svg"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						class="arrow-right-icon"
+					>
+						<title>Arrow Right</title>
+						<path d="M5 12h14" />
+						<path d="m12 5 7 7-7 7" />
+					</svg>
+				</button>
+			</footer>
+
+			{/* Clear All Confirmation Modal Overlay */}
+			<ConfirmModal
+				show={showClearConfirm()}
+				title="Clear Favorites"
+				message="Are you sure you want to permanently remove all favorited skills? This action cannot be undone."
+				onConfirm={confirmClearAll}
+				onCancel={cancelClearAll}
+			/>
+		</div>
+	);
 }
 
 export default App;
