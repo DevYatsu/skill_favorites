@@ -42,11 +42,7 @@ export function BackupDrawer(props: BackupDrawerProps) {
 		}
 	};
 
-	const handleImportJSON = (e: Event) => {
-		const target = e.target as HTMLInputElement;
-		const file = target.files?.[0];
-		if (!file) return;
-
+	const processFile = (file: File) => {
 		const reader = new FileReader();
 		reader.onload = async (event) => {
 			try {
@@ -105,7 +101,6 @@ export function BackupDrawer(props: BackupDrawerProps) {
 					type: "success",
 					text: `Successfully imported backup! Merged ${mergedList.length} skills (added ${newCount} new).`,
 				});
-				target.value = "";
 				setTimeout(() => setSettingsMessage(null), 4000);
 			} catch (err) {
 				setSettingsMessage({
@@ -116,6 +111,23 @@ export function BackupDrawer(props: BackupDrawerProps) {
 			}
 		};
 		reader.readAsText(file);
+	};
+
+	const handleImportJSON = (e: Event) => {
+		const target = e.target as HTMLInputElement;
+		const file = target.files?.[0];
+		if (file) {
+			processFile(file);
+			target.value = "";
+		}
+	};
+
+	const handleDrop = (e: DragEvent) => {
+		e.preventDefault();
+		const file = e.dataTransfer?.files?.[0];
+		if (file) {
+			processFile(file);
+		}
 	};
 
 	return (
@@ -175,7 +187,9 @@ export function BackupDrawer(props: BackupDrawerProps) {
 
 							<label
 								class="settings-action-btn import-btn"
-								title="Import and merge configuration JSON file"
+								title="Import and merge configuration JSON file (Drag & Drop supported)"
+								onDragOver={(e) => e.preventDefault()}
+								onDrop={handleDrop}
 							>
 								<svg
 									xmlns="http://www.w3.org/2000/svg"
