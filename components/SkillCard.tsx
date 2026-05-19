@@ -2,6 +2,7 @@
 import { createSignal, Show, For } from "solid-js";
 import { type FavoriteSkill, storageService } from "@/utils/storage";
 import { formatInstalls } from "@/utils/sort";
+import { copyInstallCommand } from "@/utils/clipboard";
 
 interface SkillCardProps {
 	skill: FavoriteSkill;
@@ -22,13 +23,10 @@ export function SkillCard(props: SkillCardProps) {
 		e.preventDefault();
 		e.stopPropagation();
 		const pm = await storageService.getPackageManager();
-		const command = `${pm} skills add https://github.com/${props.skill.ownerRepo} --skill ${props.skill.name}`;
-		try {
-			await navigator.clipboard.writeText(command);
+		const success = await copyInstallCommand(props.skill, pm);
+		if (success) {
 			setIsCopied(true);
 			setTimeout(() => setIsCopied(false), 1500);
-		} catch (err) {
-			console.error("Failed to copy command: ", err);
 		}
 	};
 

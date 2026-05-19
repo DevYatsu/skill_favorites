@@ -73,3 +73,18 @@ export function queryFavorites(
 		unpinnedItems: sortedUnpinned,
 	};
 }
+
+/**
+ * Extracts, deduplicates, and alphabetically sorts all active tags across a collection of skills.
+ */
+export function extractUniqueTags(items: FavoriteSkill[]): string[] {
+	const tagsSet = new Set<string>();
+	for (const s of items) {
+		if (s.tags) {
+			for (const t of s.tags) {
+				tagsSet.add(t);
+			}
+		}
+	}
+	return Array.from(tagsSet).sort();
+}

@@ -5,7 +5,7 @@ import {
 	type FavoriteSkill,
 	type SortOrder,
 } from "@/utils/storage";
-import { queryFavorites } from "@/utils/sort";
+import { queryFavorites, extractUniqueTags } from "@/utils/sort";
 import { PopupHeader } from "@/components/PopupHeader";
 import { SearchBar } from "@/components/SearchBar";
 import { TagFilterRow } from "@/components/TagFilterRow";
@@ -76,13 +76,7 @@ function App() {
 		onCleanup(() => document.removeEventListener("keydown", onKey));
 	});
 
-	const allTags = () => {
-		const tagsSet = new Set<string>();
-		for (const s of list()) {
-			if (s.tags) for (const t of s.tags) tagsSet.add(t);
-		}
-		return Array.from(tagsSet).sort();
-	};
+	const allTags = () => extractUniqueTags(list());
 
 
 	const handleRemove = async (id: string, e: MouseEvent) => {
