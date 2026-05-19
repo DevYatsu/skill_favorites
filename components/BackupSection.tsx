@@ -40,55 +40,11 @@ export function BackupSection() {
 		reader.onload = async (event) => {
 			try {
 				const imported = JSON.parse(event.target?.result as string);
-
-				if (!Array.isArray(imported)) {
-					throw new Error("Backup file must contain a JSON array of skills.");
-				}
-
-				imported.forEach((item: Partial<FavoriteSkill>, idx: number) => {
-					if (!item.id || !item.name || !item.ownerRepo) {
-						throw new Error(
-							`Item at index ${idx} is missing required fields (id, name, ownerRepo).`,
-						);
-					}
-				});
-
-				const currentList = await storageService.getFavorites();
-				const currentMap = new Map<string, FavoriteSkill>(
-					currentList.map((s) => [s.id, s]),
-				);
-
-				let newCount = 0;
-				for (const item of imported as FavoriteSkill[]) {
-					const existing = currentMap.get(item.id);
-					if (existing) {
-						currentMap.set(item.id, {
-							...existing,
-							...item,
-							tags: Array.from(
-								new Set([...(existing.tags || []), ...(item.tags || [])]),
-							),
-						});
-					} else {
-						currentMap.set(item.id, {
-							id: item.id,
-							name: item.name,
-							ownerRepo: item.ownerRepo,
-							installs: item.installs ?? 0,
-							href: item.href || "",
-							addedAt: item.addedAt || Date.now(),
-							tags: item.tags || [],
-						});
-						newCount++;
-					}
-				}
-
-				const mergedList = Array.from(currentMap.values());
-				await storageService.setFavorites(mergedList);
+				const { added, total } = await storageService.mergeBackup(imported);
 				flash(
 					{
 						type: "success",
-						text: `Imported! Merged ${mergedList.length} skills (added ${newCount} new).`,
+						text: `Imported! Merged ${total} skills (added ${added} new).`,
 					},
 					4000,
 				);

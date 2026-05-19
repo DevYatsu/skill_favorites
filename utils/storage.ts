@@ -198,6 +198,64 @@ export class SkillStorageService {
 		});
 		await this.client.setFavorites(updated);
 	}
+
+	/**
+	 * Validates and merges an imported favorites JSON array into the current favorites collection.
+	 * Returns the count of newly added skills and the new total count.
+	 * Throws an Error if the import fails validation.
+	 */
+	async mergeBackup(imported: unknown): Promise<{ added: number; total: number }> {
+		if (!Array.isArray(imported)) {
+			throw new Error("Backup file must contain a JSON array of skills.");
+		}
+
+		// 1. Structure validation
+		imported.forEach((item: Partial<FavoriteSkill>, idx: number) => {
+			if (!item.id || !item.name || !item.ownerRepo) {
+				throw new Error(
+					`Item at index ${idx} is missing required fields (id, name, ownerRepo).`,
+				);
+			}
+		});
+
+		const currentList = await this.getFavorites();
+		const currentMap = new Map<string, FavoriteSkill>(
+			currentList.map((s) => [s.id, s]),
+		);
+
+		let addedCount = 0;
+		for (const item of imported as FavoriteSkill[]) {
+			const existing = currentMap.get(item.id);
+			if (existing) {
+				currentMap.set(item.id, {
+					...existing,
+					...item,
+					tags: Array.from(
+						new Set([...(existing.tags || []), ...(item.tags || [])]),
+					),
+				});
+			} else {
+				currentMap.set(item.id, {
+					id: item.id,
+					name: item.name,
+					ownerRepo: item.ownerRepo,
+					installs: item.installs ?? 0,
+					href: item.href || "",
+					addedAt: item.addedAt || Date.now(),
+					tags: item.tags || [],
+				});
+				addedCount++;
+			}
+		}
+
+		const mergedList = Array.from(currentMap.values());
+		await this.setFavorites(mergedList);
+
+		return {
+			added: addedCount,
+			total: mergedList.length,
+		};
+	}
 }
 
 // Global active store instance using WxtStorageAdapter
