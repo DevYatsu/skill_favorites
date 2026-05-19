@@ -33,10 +33,7 @@ export default defineContentScript({
 
 			h1.appendChild(buttonWrapper);
 
-			createFavoriteButton(
-				scraped,
-				buttonWrapper,
-			);
+			createFavoriteButton(scraped, buttonWrapper);
 		}
 
 		// Core injection coordinator

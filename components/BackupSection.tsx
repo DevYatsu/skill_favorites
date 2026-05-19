@@ -1,6 +1,6 @@
 // components/BackupSection.tsx
 import { createSignal, Show } from "solid-js";
-import { type FavoriteSkill, storageService } from "@/utils/storage";
+import { storageService } from "@/utils/storage";
 
 type StatusMessage = { type: "success" | "error"; text: string };
 

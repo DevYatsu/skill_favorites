@@ -5,6 +5,7 @@ import {
 	type FavoriteSkill,
 	type SortOrder,
 } from "@/utils/storage";
+import { navigationService } from "@/utils/navigation";
 import { queryFavorites, extractUniqueTags } from "@/utils/sort";
 import { PopupHeader } from "@/components/PopupHeader";
 import { SearchBar } from "@/components/SearchBar";
@@ -78,7 +79,6 @@ function App() {
 
 	const allTags = () => extractUniqueTags(list());
 
-
 	const handleRemove = async (id: string, e: MouseEvent) => {
 		e.preventDefault();
 		e.stopPropagation();
@@ -109,10 +109,10 @@ function App() {
 
 	const openLink = (href: string) => {
 		const url = href.startsWith("http") ? href : `https://www.skills.sh${href}`;
-		browser.tabs.create({ url });
+		navigationService.openUrl(url);
 	};
 
-	const openHome = () => browser.tabs.create({ url: "https://www.skills.sh/" });
+	const openHome = () => navigationService.openHome();
 
 	return (
 		<div class="popup-container">

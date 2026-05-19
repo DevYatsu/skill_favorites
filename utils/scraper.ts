@@ -12,7 +12,10 @@ export interface ScrapedSkill {
  * Parses and extracts skill details from a skills.sh page.
  * Returns a ScrapedSkill object or null if the page is not a skill detail view.
  */
-export function scrapeSkillPage(doc: Document, pathname: string): ScrapedSkill | null {
+export function scrapeSkillPage(
+	doc: Document,
+	pathname: string,
+): ScrapedSkill | null {
 	const pathParts = pathname.split("/").filter(Boolean);
 	if (pathParts.length !== 3) return null;
 

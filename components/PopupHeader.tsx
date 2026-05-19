@@ -1,6 +1,7 @@
 // components/PopupHeader.tsx
 import { Show } from "solid-js";
 import type { SortOrder } from "@/utils/storage";
+import { navigationService } from "@/utils/navigation";
 
 interface PopupHeaderProps {
 	hasSkills: boolean;
@@ -45,7 +46,7 @@ export function PopupHeader(props: PopupHeaderProps) {
 					</button>
 				</Show>
 				<button
-					onClick={() => browser.runtime.openOptionsPage()}
+					onClick={() => navigationService.openOptionsPage()}
 					class="settings-btn"
 					title="Settings"
 					type="button"

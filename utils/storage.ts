@@ -20,7 +20,9 @@ export type SortOrder = "added" | "name" | "installs";
 export interface StorageClient {
 	getFavorites(): Promise<FavoriteSkill[]>;
 	setFavorites(items: FavoriteSkill[]): Promise<void>;
-	watchFavorites(callback: (items: FavoriteSkill[] | undefined) => void): () => void;
+	watchFavorites(
+		callback: (items: FavoriteSkill[] | undefined) => void,
+	): () => void;
 
 	getPinnedSkills(): Promise<string[]>;
 	setPinnedSkills(items: string[]): Promise<void>;
@@ -36,10 +38,13 @@ export interface StorageClient {
  * Concrete storage adapter interacting with standard WXT sync storage items.
  */
 class WxtStorageAdapter implements StorageClient {
-	private packageManagerPref = storage.defineItem<PackageManager>("sync:packageManager", {
-		fallback: "npx",
-		version: 1,
-	});
+	private packageManagerPref = storage.defineItem<PackageManager>(
+		"sync:packageManager",
+		{
+			fallback: "npx",
+			version: 1,
+		},
+	);
 
 	private sortOrderPref = storage.defineItem<SortOrder>("sync:sortOrder", {
 		fallback: "added",
@@ -51,10 +56,13 @@ class WxtStorageAdapter implements StorageClient {
 		version: 1,
 	});
 
-	private favoritesPref = storage.defineItem<FavoriteSkill[]>("sync:favorites", {
-		fallback: [],
-		version: 1,
-	});
+	private favoritesPref = storage.defineItem<FavoriteSkill[]>(
+		"sync:favorites",
+		{
+			fallback: [],
+			version: 1,
+		},
+	);
 
 	async getFavorites(): Promise<FavoriteSkill[]> {
 		return (await this.favoritesPref.getValue()) ?? [];
@@ -64,7 +72,9 @@ class WxtStorageAdapter implements StorageClient {
 		await this.favoritesPref.setValue(items);
 	}
 
-	watchFavorites(callback: (items: FavoriteSkill[] | undefined) => void): () => void {
+	watchFavorites(
+		callback: (items: FavoriteSkill[] | undefined) => void,
+	): () => void {
 		return this.favoritesPref.watch(callback);
 	}
 
@@ -107,7 +117,9 @@ export class SkillStorageService {
 		await this.client.setFavorites(items);
 	}
 
-	watchFavorites(callback: (items: FavoriteSkill[] | undefined) => void): () => void {
+	watchFavorites(
+		callback: (items: FavoriteSkill[] | undefined) => void,
+	): () => void {
 		return this.client.watchFavorites(callback);
 	}
 
@@ -163,7 +175,9 @@ export class SkillStorageService {
 
 	async removeFavorite(id: string): Promise<void> {
 		const current = await this.client.getFavorites();
-		await this.client.setFavorites(current.filter((s: FavoriteSkill) => s.id !== id));
+		await this.client.setFavorites(
+			current.filter((s: FavoriteSkill) => s.id !== id),
+		);
 		// Clean up pin state when skill is removed
 		const pins = await this.client.getPinnedSkills();
 		if (pins.includes(id)) {
@@ -204,7 +218,9 @@ export class SkillStorageService {
 	 * Returns the count of newly added skills and the new total count.
 	 * Throws an Error if the import fails validation.
 	 */
-	async mergeBackup(imported: unknown): Promise<{ added: number; total: number }> {
+	async mergeBackup(
+		imported: unknown,
+	): Promise<{ added: number; total: number }> {
 		if (!Array.isArray(imported)) {
 			throw new Error("Backup file must contain a JSON array of skills.");
 		}
