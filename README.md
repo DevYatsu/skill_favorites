@@ -1,6 +1,16 @@
-# skills-favorites
-
-A browser extension to star and organize your favorite skills from the [skills.sh](https://skills.sh) registry.
+<div align="center">
+  <h1>skills-favorites</h1>
+  <p>A browser extension to star and organize your favorite skills from the <a href="https://skills.sh">skills.sh</a> registry.</p>
+  <p>
+    <a href="#overview">Overview</a> •
+    <a href="#new-in-v200">New in v2.0.0</a> •
+    <a href="#features">Features</a> •
+    <a href="#tech-stack">Tech Stack</a> •
+    <a href="#installation">Installation</a> •
+    <a href="#development-setup">Development</a> •
+    <a href="#license">License</a>
+  </p>
+</div>
 
 ## Overview
 
