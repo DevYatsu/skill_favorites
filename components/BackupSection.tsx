@@ -63,7 +63,7 @@ export function BackupSection() {
 							id: item.id,
 							name: item.name,
 							ownerRepo: item.ownerRepo,
-							installs: item.installs || "0",
+							installs: item.installs ?? 0,
 							href: item.href || "",
 							addedAt: item.addedAt || Date.now(),
 							tags: item.tags || [],

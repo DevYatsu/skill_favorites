@@ -1,6 +1,7 @@
 // components/SkillCard.tsx
 import { createSignal, Show, For } from "solid-js";
 import { type FavoriteSkill, packageManagerPref } from "@/utils/storage";
+import { formatInstalls } from "@/utils/sort";
 
 interface SkillCardProps {
 	skill: FavoriteSkill;
@@ -73,8 +74,8 @@ export function SkillCard(props: SkillCardProps) {
 					</div>
 				</button>
 				<div class="skill-side">
-					<Show when={props.skill.installs}>
-						<span class="installs-tag">{props.skill.installs}</span>
+					<Show when={props.skill.installs > 0}>
+						<span class="installs-tag">{formatInstalls(props.skill.installs)}</span>
 					</Show>
 					<button
 						onClick={(e) => {

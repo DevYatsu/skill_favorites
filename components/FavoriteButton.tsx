@@ -12,7 +12,7 @@ interface FavoriteButtonProps {
 	id: string;
 	name: string;
 	ownerRepo: string;
-	installs: string;
+	installs: number;
 	href: string;
 }
 

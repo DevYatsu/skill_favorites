@@ -5,7 +5,7 @@ export interface FavoriteSkill {
 	id: string; // e.g., "owner/repo/name"
 	name: string; // e.g., "find-skills"
 	ownerRepo: string; // e.g., "vercel-labs/skills"
-	installs: string; // e.g., "1.6M"
+	installs: number; // raw integer, e.g. 13618
 	href: string; // e.g., "/vercel-labs/skills/find-skills"
 	addedAt: number; // Unix timestamp
 	tags?: string[]; // Optional user tags
