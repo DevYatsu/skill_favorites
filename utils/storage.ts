@@ -14,11 +14,23 @@ export interface FavoriteSkill {
 export type PackageManager = "npx" | "bunx" | "pnpm dlx";
 export type SortOrder = "added" | "name" | "installs";
 
-export const packageManagerPref = storage.defineItem<PackageManager>("sync:packageManager", { fallback: "npx", version: 1 });
-export const sortOrderPref = storage.defineItem<SortOrder>("sync:sortOrder", { fallback: "added", version: 1 });
-export const pinnedSkills = storage.defineItem<string[]>("sync:pinnedSkills", { fallback: [], version: 1 });
+export const packageManagerPref = storage.defineItem<PackageManager>(
+	"sync:packageManager",
+	{ fallback: "npx", version: 1 },
+);
+export const sortOrderPref = storage.defineItem<SortOrder>("sync:sortOrder", {
+	fallback: "added",
+	version: 1,
+});
+export const pinnedSkills = storage.defineItem<string[]>("sync:pinnedSkills", {
+	fallback: [],
+	version: 1,
+});
 
-export const favorites = storage.defineItem<FavoriteSkill[]>("sync:favorites", { fallback: [], version: 1 });
+export const favorites = storage.defineItem<FavoriteSkill[]>("sync:favorites", {
+	fallback: [],
+	version: 1,
+});
 
 export async function isFavorite(id: string): Promise<boolean> {
 	const current = await favorites.getValue();

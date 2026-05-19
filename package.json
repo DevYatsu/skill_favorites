@@ -2,7 +2,7 @@
 	"name": "skills-favorites",
 	"description": "Sleek and minimalist local favorites list and starring capability for skills.sh registry.",
 	"private": true,
-	"version": "1.0.0",
+	"version": "2.0.0",
 	"type": "module",
 	"scripts": {
 		"dev": "wxt",

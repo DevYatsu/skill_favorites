@@ -27,7 +27,9 @@ export default function Options() {
 				<div class="settings-section">
 					<div class="settings-section-title">Extension Preferences</div>
 					<div>
-						<label class="options-label" for="pm-select">Default Package Manager</label>
+						<label class="options-label" for="pm-select">
+							Default Package Manager
+						</label>
 						<select
 							id="pm-select"
 							value={pm()}

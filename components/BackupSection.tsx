@@ -15,7 +15,9 @@ export function BackupSection() {
 	const handleExport = async () => {
 		try {
 			const list = await favorites.getValue();
-			const blob = new Blob([JSON.stringify(list, null, 2)], { type: "application/json" });
+			const blob = new Blob([JSON.stringify(list, null, 2)], {
+				type: "application/json",
+			});
 			const url = URL.createObjectURL(blob);
 			const link = document.createElement("a");
 			link.href = url;
@@ -26,7 +28,10 @@ export function BackupSection() {
 			URL.revokeObjectURL(url);
 			flash({ type: "success", text: "Favorites exported successfully!" });
 		} catch (err) {
-			flash({ type: "error", text: `Export failed: ${err instanceof Error ? err.message : "Unknown error"}` });
+			flash({
+				type: "error",
+				text: `Export failed: ${err instanceof Error ? err.message : "Unknown error"}`,
+			});
 		}
 	};
 
@@ -42,12 +47,16 @@ export function BackupSection() {
 
 				imported.forEach((item: Partial<FavoriteSkill>, idx: number) => {
 					if (!item.id || !item.name || !item.ownerRepo) {
-						throw new Error(`Item at index ${idx} is missing required fields (id, name, ownerRepo).`);
+						throw new Error(
+							`Item at index ${idx} is missing required fields (id, name, ownerRepo).`,
+						);
 					}
 				});
 
 				const currentList = await favorites.getValue();
-				const currentMap = new Map<string, FavoriteSkill>(currentList.map((s) => [s.id, s]));
+				const currentMap = new Map<string, FavoriteSkill>(
+					currentList.map((s) => [s.id, s]),
+				);
 
 				let newCount = 0;
 				for (const item of imported as FavoriteSkill[]) {
@@ -56,7 +65,9 @@ export function BackupSection() {
 						currentMap.set(item.id, {
 							...existing,
 							...item,
-							tags: Array.from(new Set([...(existing.tags || []), ...(item.tags || [])])),
+							tags: Array.from(
+								new Set([...(existing.tags || []), ...(item.tags || [])]),
+							),
 						});
 					} else {
 						currentMap.set(item.id, {
@@ -75,12 +86,18 @@ export function BackupSection() {
 				const mergedList = Array.from(currentMap.values());
 				await favorites.setValue(mergedList);
 				flash(
-					{ type: "success", text: `Imported! Merged ${mergedList.length} skills (added ${newCount} new).` },
+					{
+						type: "success",
+						text: `Imported! Merged ${mergedList.length} skills (added ${newCount} new).`,
+					},
 					4000,
 				);
 			} catch (err) {
 				flash(
-					{ type: "error", text: `Import failed: ${err instanceof Error ? err.message : "Invalid JSON format"}` },
+					{
+						type: "error",
+						text: `Import failed: ${err instanceof Error ? err.message : "Invalid JSON format"}`,
+					},
 					4000,
 				);
 			}
@@ -153,7 +170,12 @@ export function BackupSection() {
 						<line x1="12" x2="12" y1="3" y2="15" />
 					</svg>
 					Import JSON
-					<input type="file" accept=".json" onChange={handleFileInput} class="sr-only" />
+					<input
+						type="file"
+						accept=".json"
+						onChange={handleFileInput}
+						class="sr-only"
+					/>
 				</label>
 			</div>
 

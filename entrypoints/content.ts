@@ -30,7 +30,9 @@ export default defineContentScript({
 					if (!text.includes("installs") || !text.includes(name)) continue;
 					// Two possible orderings of the fields in the JSON fragment
 					const match =
-						text.match(new RegExp(`"skillId":"${name}"[^}]*"installs":(\\d+)`)) ??
+						text.match(
+							new RegExp(`"skillId":"${name}"[^}]*"installs":(\\d+)`),
+						) ??
 						text.match(new RegExp(`"installs":(\\d+)[^}]*"skillId":"${name}"`));
 					if (match) {
 						installs = Number.parseInt(match[1], 10);

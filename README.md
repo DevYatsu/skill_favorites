@@ -1,11 +1,12 @@
 <div align="center">
-  <h1>skills-favorites</h1>
-  <p>Sleek and minimalist local favorites list and starring capability for the <a href="https://skills.sh">skills.sh</a> registry.</p>
+  <h1>skills-favorites v2.0.0</h1>
+  <p>Sleek, feature-rich browser extension to search, sort, pin, and sync your favorite skills from the <a href="https://skills.sh">skills.sh</a> registry.</p>
   <p>
     <a href="#overview">Overview</a> •
-    <a href="#installation">Installation</a> •
+    <a href="#new-in-v200">New in v2.0.0</a> •
     <a href="#features">Features</a> •
     <a href="#tech-stack">Tech Stack</a> •
+    <a href="#installation">Installation</a> •
     <a href="#development-setup">Development</a> •
     <a href="#license">License</a>
   </p>
@@ -15,90 +16,94 @@
 
 ## Overview
 
-**skills-favorites** is a powerful browser extension that seamlessly integrates with the `skills.sh` registry. It allows you to build a curated local collection of your favorite skills, categorize them with custom tags, and instantly retrieve their installation commands without ever having to lose track of useful modules again.
+**skills-favorites** is a powerful developer utility extension that integrates directly with the `skills.sh` registry. It allows you to build a curated local collection of your favorite skills, categorize them with custom tags, and instantly retrieve their installation commands.
 
-Built with **[WXT](https://wxt.dev)** and **[SolidJS](https://www.solidjs.com/)**, the extension guarantees ultra-fast performance, minimal footprint, and an incredibly smooth developer experience.
+Built with **[WXT](https://wxt.dev)** and **[SolidJS](https://www.solidjs.com/)**, it runs with zero runtime overhead, absolute privacy, and cross-browser synchronization.
+
+---
+
+## New in v2.0.0
+
+Version 2.0.0 elevates the extension from a simple database utility into an elite, production-grade developer workflow tool with premium UX, keyboard-driven navigation, and enhanced organization:
+
+### 1. Robust Synchronization Architecture
+*   **Universal `sync` Storage:** All favorites and preferences are fully synchronized across devices via Chrome Sync / Firefox Sync.
+*   **Firefox Dynamic Reactivity:** Fully redesigned layout-mounting updates resolve Firefox-specific background hydration race conditions, ensuring clean, on-demand layout rendering.
+
+### 2. Premium Navigation & Sorting Engine
+*   **Persistent Sort Orders:** Sort your list dynamically by **Recent** (newest added), **A-Z** (alphabetical name), or **Installs** (install count).
+*   **Skill Pinning:** Anchor up to 5 prioritized skills to the top of your popup list, complete with visual pin badges and responsive Amber highlighting.
+*   **Scraped Real-Time Installs:** Automatically extracts raw install metrics from the page Next.js RSC payload and renders beautiful, readable count badges (e.g. `13K installs`) inline in the bottom-right of the card.
+
+### 3. Keyboard-Driven Accessibility
+*   `Cmd+F` or `Ctrl+F` focuses the search box instantly, preventing default browser search overrides.
+*   `Esc` clears the active search query or safely blurs focused input boxes.
+*   `ArrowDown` and `ArrowUp` keys navigate cards smoothly by focusing active elements.
+
+### 4. Background Metrics & Clean Design
+*   **Star Counter Badge:** An amber extension action badge displays the exact count of saved skills in real-time, matching modern browser utility patterns.
+*   **Modular Component Architecture:** Extracted core logic into highly readable, single-responsibility SolidJS rendering modules under `components/` (`BackupSection`, `EmptyState`, `PopupHeader`, `SearchBar`, `SkillList`, `TagFilterRow`).
+
+---
 
 ## Features
 
-- **Integrated Starring System**: Injects a sleek "star" button directly into `skills.sh` pages, enabling you to save skills in a single click.
-- **Custom Tagging & Filtering**: Organize your saved skills with dynamic, inline custom tags. Quickly filter your entire favorites list based on the tags you've created.
-- **Quick Copy**: Click a single button to instantly copy the `npx skills add <owner>/<repo> --skill <skill>` command to your clipboard.
-- **Import / Export Backups**: Your data is 100% locally stored for privacy. Need to switch computers? Simply export your favorites configuration to a `.json` file and import it anywhere else.
-- **Accessibility-First**: Designed with strict WCAG compliance. Fully keyboard navigable, screen-reader friendly, and carefully structured to ensure interactive elements are semantic and intuitive.
+- **Integrated Starring System:** Injects a sleek star button directly next to H1 elements on `skills.sh` detail views.
+- **Custom Tagging:** Create, delete, and browse dynamic inline tags to catalog similar skill groups.
+- **Interactive Quick-Copy:** Single-button action generates and copies target CLI commands (`npx`, `bunx`, or `pnpm dlx`) ready to run.
+- **Data backups:** Seamless one-click local JSON imports and exports.
+
+---
 
 ## Tech Stack
 
-- **Framework:** [SolidJS](https://www.solidjs.com/) for lightning-fast, reactive UI rendering.
-- **Build Tool:** [WXT](https://wxt.dev) (Next-gen framework for browser extensions).
-- **Code Quality:** [Biome](https://biomejs.dev/) for blazing fast formatting and linting.
-- **Styling:** Custom, zero-dependency minimalist CSS.
+- **UI Framework:** [SolidJS](https://www.solidjs.com/) for reactive, lightning-fast DOM updates.
+- **Extension Framework:** [WXT](https://wxt.dev) for MV3 (Chrome) & MV2 (Firefox) cross-compilation.
+- **Code Quality:** [Biome](https://biomejs.dev/) & TypeScript for strict static analysis and accessibility validation.
+- **CSS Engine:** Custom HSL dark-mode system with beautiful micro-animations and zero package bloat.
+
+---
 
 ## Installation
 
-The easiest way to install **skills-favorites** is to download the latest pre-built release:
+Download the latest pre-built packages:
 
 1. Go to the [Releases](https://github.com/DevYatsu/skill_favorites/releases) page.
-2. Download the `.zip` file for your browser (`chrome.zip` or `firefox.zip`).
-3. Unzip the file.
-4. **For Chrome/Edge**: Go to `chrome://extensions/` (or `edge://extensions/`), enable "Developer mode", and click "Load unpacked". Select the unzipped folder.
-5. **For Firefox**: Go to `about:debugging#/runtime/this-firefox`, click "Load Temporary Add-on", and select the `manifest.json` inside the unzipped folder.
+2. Download the `.zip` target package (`chrome.zip` or `firefox.zip`).
+3. Extract the contents.
+4. **Chrome/Chromium:** Navigate to `chrome://extensions/`, enable **Developer mode**, and select **Load unpacked** pointing to the extracted build folder.
+5. **Firefox:** Navigate to `about:debugging#/runtime/this-firefox`, click **Load Temporary Add-on**, and choose the generated `manifest.json`.
+
+---
 
 ## Development Setup
 
-### Prerequisites
-Make sure you have Node.js and your preferred package manager (`npm`, `pnpm`, or `bun`) installed.
-
-### Development
-
-1. Clone the repository and install dependencies:
-   ```bash
-   bun install
-   ```
-
-2. Start the development server for your preferred browser:
-   ```bash
-   # For Chrome / Chromium browsers
-   bun run dev
-   
-   # For Firefox
-   bun run dev:firefox
-   ```
-   *WXT will automatically launch a fresh browser instance with the extension loaded and hot-module replacement (HMR) enabled.*
-
-### Building for Production
-
-To create an optimized, minified production build:
+### Installation & Run
 
 ```bash
-# Build for Chrome
+# Clone and install dependencies
+bun install
+
+# Run hot-reloading development client
+bun run dev          # Chrome
+bun run dev:firefox  # Firefox
+```
+
+### Production Bundling
+
+```bash
+# Compile and output extension targets
 bun run build
 
-# Build for Firefox
-bun run build:firefox
+# Generate production-ready distribution ZIP files
+bun run zip          # Chrome (MV3)
+bun run zip:firefox  # Firefox (MV2)
 ```
 
-The compiled extension will be placed in the `.output` directory. 
+Generated distributions are produced inside the local `.output/` folder.
 
-To package the extension into a `.zip` file for Chrome Web Store or Firefox Add-ons submission:
-
-```bash
-bun run zip
-bun run zip:firefox
-```
-
-## Linting & Formatting
-
-This project uses **Biome** to enforce code quality and accessibility rules.
-
-```bash
-# Run Biome linter and formatter
-biome check .
-
-# Automatically fix lint issues and format
-biome check --write .
-```
+---
 
 ## License
 
-This project is open-source and available under the MIT License.
+MIT License. Open-source and built for developers.

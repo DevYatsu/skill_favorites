@@ -66,11 +66,15 @@ function App() {
 			if (e.key === "ArrowDown") {
 				e.preventDefault();
 				focusedIndex = Math.min(focusedIndex + 1, cards.length - 1);
-				(cards[focusedIndex].querySelector(".skill-main") as HTMLElement)?.focus();
+				(
+					cards[focusedIndex].querySelector(".skill-main") as HTMLElement
+				)?.focus();
 			} else if (e.key === "ArrowUp") {
 				e.preventDefault();
 				focusedIndex = Math.max(focusedIndex - 1, 0);
-				(cards[focusedIndex].querySelector(".skill-main") as HTMLElement)?.focus();
+				(
+					cards[focusedIndex].querySelector(".skill-main") as HTMLElement
+				)?.focus();
 			}
 		};
 
@@ -91,7 +95,9 @@ function App() {
 		const query = search().trim().toLowerCase();
 		if (query) {
 			current = current.filter(
-				(s) => s.name.toLowerCase().includes(query) || s.ownerRepo.toLowerCase().includes(query),
+				(s) =>
+					s.name.toLowerCase().includes(query) ||
+					s.ownerRepo.toLowerCase().includes(query),
 			);
 		}
 		const tag = selectedTag();
@@ -100,7 +106,10 @@ function App() {
 		const pins = pinned();
 		return {
 			pinnedItems: current.filter((s) => pins.includes(s.id)),
-			unpinnedItems: applySort(current.filter((s) => !pins.includes(s.id)), sortOrder()),
+			unpinnedItems: applySort(
+				current.filter((s) => !pins.includes(s.id)),
+				sortOrder(),
+			),
 		};
 	};
 

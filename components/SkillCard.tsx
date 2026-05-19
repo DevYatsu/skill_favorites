@@ -62,7 +62,12 @@ export function SkillCard(props: SkillCardProps) {
 							<Show when={props.pinned}>
 								<span class="pin-indicator" title="Pinned">
 									{/* pin icon inline */}
-									<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="pin-dot-icon">
+									<svg
+										xmlns="http://www.w3.org/2000/svg"
+										viewBox="0 0 24 24"
+										fill="currentColor"
+										class="pin-dot-icon"
+									>
 										<title>Pinned</title>
 										<path d="M12 2a1 1 0 0 1 .894.553l2.184 4.426 4.887.71a1 1 0 0 1 .555 1.706l-3.536 3.444.834 4.866a1 1 0 0 1-1.451 1.054L12 16.347l-4.367 2.412a1 1 0 0 1-1.451-1.054l.834-4.866L3.48 9.395a1 1 0 0 1 .555-1.706l4.887-.71L11.106 2.553A1 1 0 0 1 12 2z" />
 									</svg>
@@ -74,9 +79,6 @@ export function SkillCard(props: SkillCardProps) {
 					</div>
 				</button>
 				<div class="skill-side">
-					<Show when={props.skill.installs > 0}>
-						<span class="installs-tag">{formatInstalls(props.skill.installs)}</span>
-					</Show>
 					<button
 						onClick={(e) => {
 							e.stopPropagation();
@@ -172,7 +174,7 @@ export function SkillCard(props: SkillCardProps) {
 				</div>
 			</div>
 
-			{/* Bottom tagging block */}
+			{/* Bottom: tags left, install count right */}
 			<div class="skill-card-bottom">
 				<div class="skill-tags-list">
 					<For each={props.skill.tags || []}>
@@ -238,6 +240,11 @@ export function SkillCard(props: SkillCardProps) {
 						</form>
 					</Show>
 				</div>
+				<Show when={props.skill.installs > 0}>
+					<span class="installs-count">
+						{formatInstalls(props.skill.installs)} installs
+					</span>
+				</Show>
 			</div>
 		</div>
 	);
