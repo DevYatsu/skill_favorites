@@ -1,19 +1,19 @@
 // entrypoints/options/Options.tsx
 import { createSignal, onMount } from "solid-js";
-import { packageManagerPref, type PackageManager } from "@/utils/storage";
+import { storageService, type PackageManager } from "@/utils/storage";
 import { BackupSection } from "@/components/BackupSection";
 
 export default function Options() {
 	const [pm, setPm] = createSignal<PackageManager>("npx");
 
 	onMount(async () => {
-		setPm(await packageManagerPref.getValue());
+		setPm(await storageService.getPackageManager());
 	});
 
 	const handlePmChange = async (e: Event) => {
 		const val = (e.target as HTMLSelectElement).value as PackageManager;
 		setPm(val);
-		await packageManagerPref.setValue(val);
+		await storageService.setPackageManager(val);
 	};
 
 	return (

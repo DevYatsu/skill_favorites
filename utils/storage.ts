@@ -14,90 +14,191 @@ export interface FavoriteSkill {
 export type PackageManager = "npx" | "bunx" | "pnpm dlx";
 export type SortOrder = "added" | "name" | "installs";
 
-export const packageManagerPref = storage.defineItem<PackageManager>(
-	"sync:packageManager",
-	{ fallback: "npx", version: 1 },
-);
-export const sortOrderPref = storage.defineItem<SortOrder>("sync:sortOrder", {
-	fallback: "added",
-	version: 1,
-});
-export const pinnedSkills = storage.defineItem<string[]>("sync:pinnedSkills", {
-	fallback: [],
-	version: 1,
-});
+/**
+ * Abstract storage seam to decouple WXT sync primitives from business and layout logic.
+ */
+export interface StorageClient {
+	getFavorites(): Promise<FavoriteSkill[]>;
+	setFavorites(items: FavoriteSkill[]): Promise<void>;
+	watchFavorites(callback: (items: FavoriteSkill[] | undefined) => void): () => void;
 
-export const favorites = storage.defineItem<FavoriteSkill[]>("sync:favorites", {
-	fallback: [],
-	version: 1,
-});
+	getPinnedSkills(): Promise<string[]>;
+	setPinnedSkills(items: string[]): Promise<void>;
 
-export async function isFavorite(id: string): Promise<boolean> {
-	const current = await favorites.getValue();
-	return current.some((s: FavoriteSkill) => s.id === id);
+	getSortOrder(): Promise<SortOrder>;
+	setSortOrder(order: SortOrder): Promise<void>;
+
+	getPackageManager(): Promise<PackageManager>;
+	setPackageManager(pm: PackageManager): Promise<void>;
 }
 
-export async function isPinned(id: string): Promise<boolean> {
-	const pins = await pinnedSkills.getValue();
-	return pins.includes(id);
-}
+/**
+ * Concrete storage adapter interacting with standard WXT sync storage items.
+ */
+class WxtStorageAdapter implements StorageClient {
+	private packageManagerPref = storage.defineItem<PackageManager>("sync:packageManager", {
+		fallback: "npx",
+		version: 1,
+	});
 
-export async function togglePin(id: string): Promise<void> {
-	const pins = await pinnedSkills.getValue();
-	if (pins.includes(id)) {
-		await pinnedSkills.setValue(pins.filter((p) => p !== id));
-	} else {
-		// why: cap at 5 pins to prevent the pinned section from dominating the list
-		const capped = pins.slice(-4);
-		await pinnedSkills.setValue([...capped, id]);
+	private sortOrderPref = storage.defineItem<SortOrder>("sync:sortOrder", {
+		fallback: "added",
+		version: 1,
+	});
+
+	private pinnedSkillsPref = storage.defineItem<string[]>("sync:pinnedSkills", {
+		fallback: [],
+		version: 1,
+	});
+
+	private favoritesPref = storage.defineItem<FavoriteSkill[]>("sync:favorites", {
+		fallback: [],
+		version: 1,
+	});
+
+	async getFavorites(): Promise<FavoriteSkill[]> {
+		return (await this.favoritesPref.getValue()) ?? [];
+	}
+
+	async setFavorites(items: FavoriteSkill[]): Promise<void> {
+		await this.favoritesPref.setValue(items);
+	}
+
+	watchFavorites(callback: (items: FavoriteSkill[] | undefined) => void): () => void {
+		return this.favoritesPref.watch(callback);
+	}
+
+	async getPinnedSkills(): Promise<string[]> {
+		return (await this.pinnedSkillsPref.getValue()) ?? [];
+	}
+
+	async setPinnedSkills(items: string[]): Promise<void> {
+		await this.pinnedSkillsPref.setValue(items);
+	}
+
+	async getSortOrder(): Promise<SortOrder> {
+		return (await this.sortOrderPref.getValue()) ?? "added";
+	}
+
+	async setSortOrder(order: SortOrder): Promise<void> {
+		await this.sortOrderPref.setValue(order);
+	}
+
+	async getPackageManager(): Promise<PackageManager> {
+		return (await this.packageManagerPref.getValue()) ?? "npx";
+	}
+
+	async setPackageManager(pm: PackageManager): Promise<void> {
+		await this.packageManagerPref.setValue(pm);
 	}
 }
 
-export async function addFavorite(
-	skill: Omit<FavoriteSkill, "addedAt">,
-): Promise<void> {
-	const current = await favorites.getValue();
-	if (current.some((s: FavoriteSkill) => s.id === skill.id)) return;
-	await favorites.setValue([
-		...current,
-		{ ...skill, addedAt: Date.now(), tags: [] },
-	]);
-}
+/**
+ * Domain-specific store service wrapping the decoupled StorageClient seam.
+ */
+export class SkillStorageService {
+	constructor(private client: StorageClient) {}
 
-export async function removeFavorite(id: string): Promise<void> {
-	const current = await favorites.getValue();
-	await favorites.setValue(current.filter((s: FavoriteSkill) => s.id !== id));
-	// Clean up pin state when skill is removed
-	const pins = await pinnedSkills.getValue();
-	if (pins.includes(id)) {
-		await pinnedSkills.setValue(pins.filter((p) => p !== id));
+	async getFavorites(): Promise<FavoriteSkill[]> {
+		return this.client.getFavorites();
+	}
+
+	async setFavorites(items: FavoriteSkill[]): Promise<void> {
+		await this.client.setFavorites(items);
+	}
+
+	watchFavorites(callback: (items: FavoriteSkill[] | undefined) => void): () => void {
+		return this.client.watchFavorites(callback);
+	}
+
+	async getPinnedSkills(): Promise<string[]> {
+		return this.client.getPinnedSkills();
+	}
+
+	async getSortOrder(): Promise<SortOrder> {
+		return this.client.getSortOrder();
+	}
+
+	async setSortOrder(order: SortOrder): Promise<void> {
+		await this.client.setSortOrder(order);
+	}
+
+	async getPackageManager(): Promise<PackageManager> {
+		return this.client.getPackageManager();
+	}
+
+	async setPackageManager(pm: PackageManager): Promise<void> {
+		await this.client.setPackageManager(pm);
+	}
+
+	async isFavorite(id: string): Promise<boolean> {
+		const current = await this.client.getFavorites();
+		return current.some((s: FavoriteSkill) => s.id === id);
+	}
+
+	async isPinned(id: string): Promise<boolean> {
+		const pins = await this.client.getPinnedSkills();
+		return pins.includes(id);
+	}
+
+	async togglePin(id: string): Promise<void> {
+		const pins = await this.client.getPinnedSkills();
+		if (pins.includes(id)) {
+			await this.client.setPinnedSkills(pins.filter((p) => p !== id));
+		} else {
+			// why: cap at 5 pins to prevent the pinned section from dominating the list
+			const capped = pins.slice(-4);
+			await this.client.setPinnedSkills([...capped, id]);
+		}
+	}
+
+	async addFavorite(skill: Omit<FavoriteSkill, "addedAt">): Promise<void> {
+		const current = await this.client.getFavorites();
+		if (current.some((s: FavoriteSkill) => s.id === skill.id)) return;
+		await this.client.setFavorites([
+			...current,
+			{ ...skill, addedAt: Date.now(), tags: [] },
+		]);
+	}
+
+	async removeFavorite(id: string): Promise<void> {
+		const current = await this.client.getFavorites();
+		await this.client.setFavorites(current.filter((s: FavoriteSkill) => s.id !== id));
+		// Clean up pin state when skill is removed
+		const pins = await this.client.getPinnedSkills();
+		if (pins.includes(id)) {
+			await this.client.setPinnedSkills(pins.filter((p) => p !== id));
+		}
+	}
+
+	async addSkillTag(id: string, tag: string): Promise<void> {
+		const current = await this.client.getFavorites();
+		const normalized = tag.trim().toLowerCase();
+		if (!normalized) return;
+
+		const updated = current.map((s: FavoriteSkill) => {
+			if (s.id === id) {
+				const existing = s.tags || [];
+				if (existing.includes(normalized)) return s;
+				return { ...s, tags: [...existing, normalized] };
+			}
+			return s;
+		});
+		await this.client.setFavorites(updated);
+	}
+
+	async removeSkillTag(id: string, tag: string): Promise<void> {
+		const current = await this.client.getFavorites();
+		const updated = current.map((s: FavoriteSkill) => {
+			if (s.id === id) {
+				const existing = s.tags || [];
+				return { ...s, tags: existing.filter((t) => t !== tag) };
+			}
+			return s;
+		});
+		await this.client.setFavorites(updated);
 	}
 }
 
-export async function addSkillTag(id: string, tag: string): Promise<void> {
-	const current = await favorites.getValue();
-	const normalized = tag.trim().toLowerCase();
-	if (!normalized) return;
-
-	const updated = current.map((s: FavoriteSkill) => {
-		if (s.id === id) {
-			const existing = s.tags || [];
-			if (existing.includes(normalized)) return s;
-			return { ...s, tags: [...existing, normalized] };
-		}
-		return s;
-	});
-	await favorites.setValue(updated);
-}
-
-export async function removeSkillTag(id: string, tag: string): Promise<void> {
-	const current = await favorites.getValue();
-	const updated = current.map((s: FavoriteSkill) => {
-		if (s.id === id) {
-			const existing = s.tags || [];
-			return { ...s, tags: existing.filter((t) => t !== tag) };
-		}
-		return s;
-	});
-	await favorites.setValue(updated);
-}
+// Global active store instance using WxtStorageAdapter
+export const storageService = new SkillStorageService(new WxtStorageAdapter());

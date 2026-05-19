@@ -1,5 +1,5 @@
 // entrypoints/background.ts
-import { favorites } from "@/utils/storage";
+import { storageService } from "@/utils/storage";
 
 function updateBadge(count: number) {
 	const text = count > 0 ? String(count) : "";
@@ -10,10 +10,10 @@ function updateBadge(count: number) {
 
 export default defineBackground(() => {
 	// Set badge on startup from persisted state
-	favorites.getValue().then((list) => updateBadge(list.length));
+	storageService.getFavorites().then((list) => updateBadge(list.length));
 
 	// Keep badge in sync with every write
-	favorites.watch((newList) => {
+	storageService.watchFavorites((newList) => {
 		updateBadge((newList ?? []).length);
 	});
 });

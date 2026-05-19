@@ -1,12 +1,7 @@
 // components/FavoriteButton.tsx
 import { render } from "solid-js/web";
 import { createSignal, onMount, onCleanup } from "solid-js";
-import {
-	addFavorite,
-	removeFavorite,
-	isFavorite,
-	favorites,
-} from "@/utils/storage";
+import { storageService } from "@/utils/storage";
 
 interface FavoriteButtonProps {
 	id: string;
@@ -25,10 +20,10 @@ export function FavoriteButton(props: FavoriteButtonProps) {
 		e.stopPropagation();
 
 		if (active()) {
-			await removeFavorite(props.id);
+			await storageService.removeFavorite(props.id);
 			setActive(false);
 		} else {
-			await addFavorite({
+			await storageService.addFavorite({
 				id: props.id,
 				name: props.name,
 				ownerRepo: props.ownerRepo,
@@ -40,9 +35,9 @@ export function FavoriteButton(props: FavoriteButtonProps) {
 	};
 
 	onMount(async () => {
-		setActive(await isFavorite(props.id));
+		setActive(await storageService.isFavorite(props.id));
 
-		const unwatch = favorites.watch((newFavs) => {
+		const unwatch = storageService.watchFavorites((newFavs) => {
 			const isFav = (newFavs || []).some((s) => s.id === props.id);
 			setActive(isFav);
 		});

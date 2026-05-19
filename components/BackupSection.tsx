@@ -1,6 +1,6 @@
 // components/BackupSection.tsx
 import { createSignal, Show } from "solid-js";
-import { type FavoriteSkill, favorites } from "@/utils/storage";
+import { type FavoriteSkill, storageService } from "@/utils/storage";
 
 type StatusMessage = { type: "success" | "error"; text: string };
 
@@ -14,7 +14,7 @@ export function BackupSection() {
 
 	const handleExport = async () => {
 		try {
-			const list = await favorites.getValue();
+			const list = await storageService.getFavorites();
 			const blob = new Blob([JSON.stringify(list, null, 2)], {
 				type: "application/json",
 			});
@@ -53,7 +53,7 @@ export function BackupSection() {
 					}
 				});
 
-				const currentList = await favorites.getValue();
+				const currentList = await storageService.getFavorites();
 				const currentMap = new Map<string, FavoriteSkill>(
 					currentList.map((s) => [s.id, s]),
 				);
@@ -84,7 +84,7 @@ export function BackupSection() {
 				}
 
 				const mergedList = Array.from(currentMap.values());
-				await favorites.setValue(mergedList);
+				await storageService.setFavorites(mergedList);
 				flash(
 					{
 						type: "success",

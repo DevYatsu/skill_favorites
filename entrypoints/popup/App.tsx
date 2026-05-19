@@ -1,13 +1,7 @@
 // entrypoints/popup/App.tsx
 import { createSignal, Show, onMount, onCleanup } from "solid-js";
 import {
-	favorites,
-	removeFavorite,
-	addSkillTag,
-	removeSkillTag,
-	togglePin,
-	pinnedSkills,
-	sortOrderPref,
+	storageService,
 	type FavoriteSkill,
 	type SortOrder,
 } from "@/utils/storage";
@@ -33,9 +27,9 @@ function App() {
 	const refreshList = async () => {
 		try {
 			const [data, pins, order] = await Promise.all([
-				favorites.getValue(),
-				pinnedSkills.getValue(),
-				sortOrderPref.getValue(),
+				storageService.getFavorites(),
+				storageService.getPinnedSkills(),
+				storageService.getSortOrder(),
 			]);
 			setList(Array.isArray(data) ? [...data] : []);
 			setPinned(Array.isArray(pins) ? [...pins] : []);
@@ -94,29 +88,29 @@ function App() {
 	const handleRemove = async (id: string, e: MouseEvent) => {
 		e.preventDefault();
 		e.stopPropagation();
-		await removeFavorite(id);
+		await storageService.removeFavorite(id);
 		await refreshList();
 	};
 
 	const handleTogglePin = async (id: string) => {
-		await togglePin(id);
+		await storageService.togglePin(id);
 		await refreshList();
 	};
 
 	const handleSaveTag = async (id: string, tag: string) => {
-		await addSkillTag(id, tag);
+		await storageService.addSkillTag(id, tag);
 		await refreshList();
 	};
 
 	const handleRemoveTag = async (id: string, tag: string) => {
-		await removeSkillTag(id, tag);
+		await storageService.removeSkillTag(id, tag);
 		await refreshList();
 	};
 
 	const handleSortChange = async (e: Event) => {
 		const val = (e.target as HTMLSelectElement).value as SortOrder;
 		setSortOrder(val);
-		await sortOrderPref.setValue(val);
+		await storageService.setSortOrder(val);
 	};
 
 	const openLink = (href: string) => {
@@ -201,7 +195,7 @@ function App() {
 				title="Clear Favorites"
 				message="Are you sure you want to permanently remove all favorited skills? This action cannot be undone."
 				onConfirm={async () => {
-					await favorites.setValue([]);
+					await storageService.setFavorites([]);
 					setShowClearConfirm(false);
 					await refreshList();
 				}}
