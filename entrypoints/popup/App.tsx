@@ -11,7 +11,7 @@ import {
 	type FavoriteSkill,
 	type SortOrder,
 } from "@/utils/storage";
-import { applySort } from "@/utils/sort";
+import { queryFavorites } from "@/utils/sort";
 import { PopupHeader } from "@/components/PopupHeader";
 import { SearchBar } from "@/components/SearchBar";
 import { TagFilterRow } from "@/components/TagFilterRow";
@@ -90,28 +90,6 @@ function App() {
 		return Array.from(tagsSet).sort();
 	};
 
-	const splitList = () => {
-		let current = list();
-		const query = search().trim().toLowerCase();
-		if (query) {
-			current = current.filter(
-				(s) =>
-					s.name.toLowerCase().includes(query) ||
-					s.ownerRepo.toLowerCase().includes(query),
-			);
-		}
-		const tag = selectedTag();
-		if (tag) current = current.filter((s) => s.tags?.includes(tag));
-
-		const pins = pinned();
-		return {
-			pinnedItems: current.filter((s) => pins.includes(s.id)),
-			unpinnedItems: applySort(
-				current.filter((s) => !pins.includes(s.id)),
-				sortOrder(),
-			),
-		};
-	};
 
 	const handleRemove = async (id: string, e: MouseEvent) => {
 		e.preventDefault();
@@ -177,7 +155,12 @@ function App() {
 					fallback={<EmptyState onBrowse={openHome} />}
 				>
 					{(() => {
-						const { pinnedItems, unpinnedItems } = splitList();
+						const { pinnedItems, unpinnedItems } = queryFavorites(list(), {
+							searchQuery: search(),
+							selectedTag: selectedTag(),
+							pinnedIds: pinned(),
+							sortOrder: sortOrder(),
+						});
 						return (
 							<SkillList
 								pinnedItems={pinnedItems}

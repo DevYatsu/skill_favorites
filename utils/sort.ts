@@ -22,3 +22,54 @@ export function applySort(
 		return b.addedAt - a.addedAt;
 	});
 }
+
+export interface QueryOptions {
+	searchQuery: string;
+	selectedTag: string;
+	pinnedIds: string[];
+	sortOrder: SortOrder;
+}
+
+export interface QueryResult {
+	pinnedItems: FavoriteSkill[];
+	unpinnedItems: FavoriteSkill[];
+}
+
+/**
+ * Filters, splits (pinned vs unpinned), and sorts a collection of skills in a single pure step.
+ */
+export function queryFavorites(
+	items: FavoriteSkill[],
+	options: QueryOptions,
+): QueryResult {
+	let current = [...items];
+
+	// 1. Search filter
+	const query = options.searchQuery.trim().toLowerCase();
+	if (query) {
+		current = current.filter(
+			(s) =>
+				s.name.toLowerCase().includes(query) ||
+				s.ownerRepo.toLowerCase().includes(query),
+		);
+	}
+
+	// 2. Tag filter
+	const tag = options.selectedTag;
+	if (tag) {
+		current = current.filter((s) => s.tags?.includes(tag));
+	}
+
+	// 3. Pinned vs Unpinned division
+	const pins = options.pinnedIds;
+	const pinnedItems = current.filter((s) => pins.includes(s.id));
+	const unpinnedItems = current.filter((s) => !pins.includes(s.id));
+
+	// 4. Sort unpinned items
+	const sortedUnpinned = applySort(unpinnedItems, options.sortOrder);
+
+	return {
+		pinnedItems,
+		unpinnedItems: sortedUnpinned,
+	};
+}
