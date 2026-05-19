@@ -59,7 +59,7 @@ export function SkillCard(props: SkillCardProps) {
 					<div class="skill-info">
 						<div class="skill-name">
 							<Show when={props.pinned}>
-								<span class="pin-indicator" title="Pinned" aria-label="Pinned">
+								<span class="pin-indicator" title="Pinned">
 									{/* pin icon inline */}
 									<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="pin-dot-icon">
 										<title>Pinned</title>
